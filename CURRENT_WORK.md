@@ -1,0 +1,90 @@
+## Creation
+- [ ] zipper
+  - [ ] list
+  - [ ] struct
+- [ ] seq-zip
+  - [ ] list
+  - [ ] struct
+- [ ] vector-zip
+  - [ ] list
+  - [ ] struct
+- [ ] xml-zip
+  - [ ] list
+  - [ ] struct
+
+
+## Navigation
+- [ ] node
+  - [ ] list
+  - [ ] struct
+- [ ] branch?
+  - [ ] list
+  - [ ] struct
+- [ ] children
+  - [ ] list
+  - [ ] struct
+- [ ] make-node
+  - [ ] list
+  - [ ] struct
+- [ ] path
+  - [ ] list
+  - [ ] struct
+- [ ] lefts
+  - [ ] list
+  - [ ] struct
+- [ ] rights
+  - [ ] list
+  - [ ] struct
+- [ ] down
+  - [ ] list
+  - [ ] struct
+- [ ] up
+  - [ ] list
+  - [ ] struct
+- [ ] root
+  - [ ] list
+  - [ ] struct
+- [ ] right
+  - [ ] list
+  - [ ] struct
+- [ ] rightmost
+  - [ ] list
+  - [ ] struct
+- [ ] left
+  - [ ] list
+  - [ ] struct
+- [ ] leftmost
+  - [ ] list
+  - [ ] struct
+
+## Editing
+- [ ] insert-left
+  - [ ] list
+  - [ ] struct
+- [ ] insert-right
+  - [ ] list
+  - [ ] struct
+- [ ] replace
+  - [ ] list
+  - [ ] struct
+- [ ] edit
+  - [ ] list
+  - [ ] struct
+- [ ] insert-child
+  - [ ] list
+  - [ ] struct
+- [ ] append-child
+  - [ ] list
+  - [ ] struct
+- [ ] next
+  - [ ] list
+  - [ ] struct
+- [ ] prev
+  - [ ] list
+  - [ ] struct
+- [ ] end?
+  - [ ] list
+  - [ ] struct
+- [ ] remove
+  - [ ] list
+  - [ ] struct
