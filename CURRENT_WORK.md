@@ -1,17 +1,7 @@
 ## Creation
 - [ ] zipper
-  - [ ] list
-  - [ ] struct
-- [ ] seq-zip
-  - [ ] list
-  - [ ] struct
-- [ ] vector-zip
-  - [ ] list
-  - [ ] struct
-- [ ] xml-zip
-  - [ ] list
-  - [ ] struct
-
+- [ ] vector-zip (list)
+- [ ] xml-zip (map?)
 
 ## Navigation
 - [ ] node
