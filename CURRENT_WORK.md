@@ -1,12 +1,10 @@
 ## Creation
-- [ ] zipper
+- [x] zipper
 - [ ] vector-zip (list)
 - [ ] xml-zip (map?)
 
 ## Navigation
-- [ ] node
-  - [ ] list
-  - [ ] struct
+- [x] node
 - [ ] branch?
   - [ ] list
   - [ ] struct
@@ -25,27 +23,17 @@
 - [ ] rights
   - [ ] list
   - [ ] struct
-- [ ] down
-  - [ ] list
-  - [ ] struct
-- [ ] up
-  - [ ] list
-  - [ ] struct
+- [x] down
+- [x] up
 - [ ] root
   - [ ] list
   - [ ] struct
-- [ ] right
-  - [ ] list
-  - [ ] struct
-- [ ] rightmost
-  - [ ] list
-  - [ ] struct
-- [ ] left
-  - [ ] list
-  - [ ] struct
-- [ ] leftmost
-  - [ ] list
-  - [ ] struct
+- [x] right
+  - [x] list
+  - [x] struct
+- [x] rightmost
+- [x] left
+- [x] leftmost
 
 ## Editing
 - [ ] insert-left
@@ -78,3 +66,4 @@
 - [ ] remove
   - [ ] list
   - [ ] struct
+
