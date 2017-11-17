@@ -265,4 +265,94 @@ defmodule ExZipper.Zipper.StructTest do
       assert Z.leftmost(zipper) == zipper
     end
   end
+
+  describe "root" do
+    test "remains in place if called at the root", context do
+      assert context.zipper == Z.root(context.zipper)
+    end
+
+    test "returns to the root from the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right |> Z.down
+
+      assert Z.root(zipper) == context.zipper
+    end
+  end
+
+  describe "lefts" do
+    test "returns an error if called on the root", context do
+      assert Z.lefts(context.zipper) == {:error, :lefts_of_root}
+    end
+
+    test "returns all siblings to the left of the current focus", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.lefts(zipper) == []
+
+      zipper = zipper |> Z.right |> Z.right
+
+      assert Z.lefts(zipper) == [%Note{note: "c4"}, %Voice{name: "empty", music: []}]
+    end
+  end
+
+  describe "rights" do
+    test "returns an error if called on the root", context do
+      assert Z.rights(context.zipper) == {:error, :rights_of_root}
+    end
+
+    test "returns all siblings to the right of the current focus", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.rights(zipper) == [
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]
+
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right
+
+      assert Z.rights(zipper) == [
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]
+    end
+  end
 end

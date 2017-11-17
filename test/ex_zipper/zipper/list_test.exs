@@ -163,4 +163,48 @@ defmodule ExZipper.Zipper.ListTest do
       assert Z.leftmost(zipper) == zipper
     end
   end
+
+  describe "root" do
+    test "remains in place if called at the root", context do
+      assert context.zipper == Z.root(context.zipper)
+    end
+
+    test "returns to the root from the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right |> Z.down
+
+      assert Z.root(zipper) == context.zipper
+    end
+  end
+
+  describe "lefts" do
+    test "returns an error if called on the root", context do
+      assert Z.lefts(context.zipper) == {:error, :lefts_of_root}
+    end
+
+    test "returns all siblings to the left of the current focus", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.lefts(zipper) == []
+
+      zipper = zipper |> Z.right |> Z.right
+
+      assert Z.lefts(zipper) == [1, []]
+    end
+  end
+
+  describe "rights" do
+    test "returns an error if called on the root", context do
+      assert Z.rights(context.zipper) == {:error, :rights_of_root}
+    end
+
+    test "returns all siblings to the right of the current focus", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.rights(zipper) == [[],2,[3,4,[5,6],[7]],8]
+
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right
+
+      assert Z.rights(zipper) == [[3,4,[5,6],[7]],8]
+    end
+  end
 end

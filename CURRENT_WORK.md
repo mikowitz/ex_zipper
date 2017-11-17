@@ -17,20 +17,12 @@
 - [ ] path
   - [ ] list
   - [ ] struct
-- [ ] lefts
-  - [ ] list
-  - [ ] struct
-- [ ] rights
-  - [ ] list
-  - [ ] struct
+- [x] lefts
+- [x] rights
 - [x] down
 - [x] up
-- [ ] root
-  - [ ] list
-  - [ ] struct
+- [x] root
 - [x] right
-  - [x] list
-  - [x] struct
 - [x] rightmost
 - [x] left
 - [x] leftmost
