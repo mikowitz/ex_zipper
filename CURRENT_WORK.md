@@ -6,17 +6,9 @@
 ## Navigation
 - [x] node
 - [ ] branch?
-  - [ ] list
-  - [ ] struct
 - [ ] children
-  - [ ] list
-  - [ ] struct
 - [ ] make-node
-  - [ ] list
-  - [ ] struct
-- [ ] path
-  - [ ] list
-  - [ ] struct
+- [x] path
 - [x] lefts
 - [x] rights
 - [x] down
@@ -29,33 +21,12 @@
 
 ## Editing
 - [ ] insert-left
-  - [ ] list
-  - [ ] struct
 - [ ] insert-right
-  - [ ] list
-  - [ ] struct
 - [ ] replace
-  - [ ] list
-  - [ ] struct
 - [ ] edit
-  - [ ] list
-  - [ ] struct
 - [ ] insert-child
-  - [ ] list
-  - [ ] struct
 - [ ] append-child
-  - [ ] list
-  - [ ] struct
 - [ ] next
-  - [ ] list
-  - [ ] struct
 - [ ] prev
-  - [ ] list
-  - [ ] struct
 - [ ] end?
-  - [ ] list
-  - [ ] struct
 - [ ] remove
-  - [ ] list
-  - [ ] struct
-

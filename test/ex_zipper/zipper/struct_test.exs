@@ -355,4 +355,46 @@ defmodule ExZipper.Zipper.StructTest do
       ]
     end
   end
+
+  describe "path" do
+    test "returns an empty list if called at the root", context do
+      assert Z.path(context.zipper) == []
+    end
+
+    test "returns a path of nodes leading to the current focus from the root", context do
+      zipper = context.zipper |> Z.down |> Z.rightmost |> Z.left |> Z.down |> Z.right |> Z.right |> Z.down |> Z.right
+
+      assert Z.node(zipper) == %Note{note: "a4"}
+      assert Z.path(zipper) == [
+        context.measure,
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Voice{
+          name: "soprano2",
+          music: [
+            %Note{note: "g4"},
+            %Note{note: "a4"}
+          ]
+        }
+      ]
+    end
+  end
 end

@@ -116,4 +116,7 @@ defmodule ExZipper.Zipper do
 
   def rights(%__MODULE__{crumbs: nil}), do: {:error, :rights_of_root}
   def rights(%__MODULE__{crumbs: %{right: right}}), do: right
+
+  def path(%__MODULE__{crumbs: nil}), do: []
+  def path(%__MODULE__{crumbs: %{ppath: paths}}), do: Enum.reverse(paths)
 end

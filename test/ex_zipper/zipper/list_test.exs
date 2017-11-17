@@ -207,4 +207,17 @@ defmodule ExZipper.Zipper.ListTest do
       assert Z.rights(zipper) == [[3,4,[5,6],[7]],8]
     end
   end
+
+  describe "path" do
+    test "returns an empty list if called at the root", context do
+      assert Z.path(context.zipper) == []
+    end
+
+    test "returns a path of nodes leading to the current focus from the root", context do
+      zipper = context.zipper |> Z.down |> Z.rightmost |> Z.left |> Z.down |> Z.right |> Z.right |> Z.down
+
+      assert Z.node(zipper) == 5
+      assert Z.path(zipper) == [context.list, [3,4,[5,6],[7]], [5,6]]
+    end
+  end
 end
