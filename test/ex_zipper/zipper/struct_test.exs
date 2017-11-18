@@ -42,7 +42,13 @@ defmodule ExZipper.Zipper.StructTest do
     zipper = Z.zipper(
       fn map -> Map.has_key?(map, :music) end,
       fn %{music: music} -> music end,
-      fn node, music -> %{node | music: music} end,
+      # fn node, music -> %{node | music: music} end,
+      fn node, music ->
+        case Map.has_key?(node, :music) do
+          true -> %{node | music: music}
+          false -> %Voice{name: "", music: music}
+        end
+      end,
       measure
     )
     {:ok, %{measure: measure, zipper: zipper}}
@@ -395,6 +401,41 @@ defmodule ExZipper.Zipper.StructTest do
           ]
         }
       ]
+    end
+  end
+
+  describe "branch?" do
+    test "returns true if the current focus is a branch", context do
+      assert Z.branch?(context.zipper)
+    end
+
+    test "returns false if the current focus is not a branch", context do
+      zipper = Z.down(context.zipper)
+
+      refute Z.branch?(zipper)
+    end
+  end
+
+  describe "children" do
+    test "returns the children of the current focus if it is a branch", context do
+      assert Z.children(context.zipper) == context.measure.music
+    end
+
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.children(zipper) == {:error, :children_of_leaf}
+    end
+  end
+
+  describe "make_node" do
+    test "returns a new branch node, given an existing node and new children", context do
+      new_node = Z.make_node(context.zipper, %Voice{name: "test voice", music: [%Note{note: "c4"}]}, [%Note{note: "d4"}])
+      assert new_node == %Voice{name: "test voice", music: [%Note{note: "d4"}]}
+
+      node_from_leaf = Z.make_node(context.zipper, %Note{note: "e4"}, [%Note{note: "fs8"}])
+
+      assert node_from_leaf == %Voice{name: "", music: [%Note{note: "fs8"}]}
     end
   end
 end

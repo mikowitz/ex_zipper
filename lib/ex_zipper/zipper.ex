@@ -119,4 +119,19 @@ defmodule ExZipper.Zipper do
 
   def path(%__MODULE__{crumbs: nil}), do: []
   def path(%__MODULE__{crumbs: %{ppath: paths}}), do: Enum.reverse(paths)
+
+  def branch?(zipper = %__MODULE__{}) do
+    zipper.functions.branch?.(zipper.focus)
+  end
+
+  def children(zipper = %__MODULE__{}) do
+    case branch?(zipper) do
+      true -> zipper.functions.children.(zipper.focus)
+      false -> {:error, :children_of_leaf}
+    end
+  end
+
+  def make_node(zipper = %__MODULE__{}, node, children) do
+    zipper.functions.make_node.(node, children)
+  end
 end

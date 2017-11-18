@@ -5,9 +5,9 @@
 
 ## Navigation
 - [x] node
-- [ ] branch?
-- [ ] children
-- [ ] make-node
+- [x] branch?
+- [x] children
+- [x] make-node
 - [x] path
 - [x] lefts
 - [x] rights

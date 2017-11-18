@@ -220,4 +220,35 @@ defmodule ExZipper.Zipper.ListTest do
       assert Z.path(zipper) == [context.list, [3,4,[5,6],[7]], [5,6]]
     end
   end
+
+  describe "branch?" do
+    test "returns true if the current focus is a branch", context do
+      assert Z.branch?(context.zipper)
+    end
+
+    test "returns false if the current focus is not a branch", context do
+      zipper = Z.down(context.zipper)
+
+      refute Z.branch?(zipper)
+    end
+  end
+
+  describe "children" do
+    test "returns the children of the current focus if it is a branch", context do
+      assert Z.children(context.zipper) == context.list
+    end
+
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.children(zipper) == {:error, :children_of_leaf}
+    end
+  end
+
+  describe "make_node" do
+    test "returns a new branch node, given an existing node and new children", context do
+      new_node = Z.make_node(context.zipper, [1,2,3], [4,5,6])
+      assert new_node == [4,5,6]
+    end
+  end
 end
