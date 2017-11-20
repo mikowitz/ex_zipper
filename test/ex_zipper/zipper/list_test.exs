@@ -271,4 +271,67 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper.focus == [1,[],2,[3,4,5,6,7],8]
     end
   end
+
+  describe "insert_left" do
+    test "returns an error if called on the root", context do
+      assert Z.insert_left(context.zipper, [10,11,12]) == {:error, :insert_left_of_root}
+    end
+
+    test "inserts the provided node to the left of the current focus, without changing focus", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.insert_left(zipper, [10,11,12])
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [[10,11,12],1,[],2,[3,4,[5,6],[7]],8]
+    end
+  end
+
+  describe "insert_right" do
+    test "returns an error if called on the root", context do
+      assert Z.insert_right(context.zipper, [10,11,12]) == {:error, :insert_right_of_root}
+    end
+
+    test "inserts the provided node to the right of the current focus, without changing focus", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.insert_right(zipper, [10,11,12])
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [1,[10,11,12],[],2,[3,4,[5,6],[7]],8]
+    end
+  end
+
+  describe "insert_child" do
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.insert_child(zipper, 11) == {:error, :insert_child_of_leaf}
+    end
+
+    test "adds a node as the leftmost child of the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+
+      zipper = Z.insert_child(zipper, 11)
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [1,[],2,[11, 3,4,[5,6],[7]],8]
+    end
+  end
+
+  describe "append_child" do
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.append_child(zipper, 11) == {:error, :append_child_of_leaf}
+    end
+
+    test "adds a node as the rightmost child of the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+
+      zipper = Z.append_child(zipper, 11)
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [1,[],2,[3,4,[5,6],[7],11],8]
+    end
+  end
 end
+

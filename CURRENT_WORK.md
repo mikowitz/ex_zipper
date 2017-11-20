@@ -20,12 +20,12 @@
 - [x] leftmost
 
 ## Editing
-- [ ] insert-left
-- [ ] insert-right
+- [x] insert-left
+- [x] insert-right
 - [x] replace
 - [x] edit
-- [ ] insert-child
-- [ ] append-child
+- [x] insert-child
+- [x] append-child
 - [ ] next
 - [ ] prev
 - [ ] end?

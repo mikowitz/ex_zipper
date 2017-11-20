@@ -142,4 +142,46 @@ defmodule ExZipper.Zipper do
   def edit(zipper = %__MODULE__{}, func) do
     replace(zipper, func.(zipper.focus))
   end
+
+  def insert_left(%__MODULE__{crumbs: nil}, _), do: {:error, :insert_left_of_root}
+  def insert_left(zipper = %__MODULE__{}, node) do
+    %{zipper |
+      crumbs: %{zipper.crumbs |
+        left: [node|zipper.crumbs.left]
+      }
+    }
+  end
+
+  def insert_right(%__MODULE__{crumbs: nil}, _), do: {:error, :insert_right_of_root}
+  def insert_right(zipper = %__MODULE__{}, node) do
+    %{zipper |
+      crumbs: %{zipper.crumbs |
+        right: [node|zipper.crumbs.right]
+      }
+    }
+  end
+
+  def insert_child(zipper = %__MODULE__{}, new_child) do
+    case branch?(zipper) do
+      false -> {:error, :insert_child_of_leaf}
+      true ->
+        new_focus = zipper.functions.make_node.(
+          zipper.focus,
+          [new_child|zipper.functions.children.(zipper.focus)]
+        )
+        %{zipper | focus: new_focus}
+    end
+  end
+
+  def append_child(zipper = %__MODULE__{}, new_child) do
+    case branch?(zipper) do
+      false -> {:error, :append_child_of_leaf}
+      true ->
+        new_focus = zipper.functions.make_node.(
+          zipper.focus,
+          zipper.functions.children.(zipper.focus) ++ [new_child]
+        )
+        %{zipper | focus: new_focus}
+    end
+  end
 end

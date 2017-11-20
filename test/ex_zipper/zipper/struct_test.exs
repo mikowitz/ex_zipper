@@ -508,4 +508,170 @@ defmodule ExZipper.Zipper.StructTest do
       ]}
     end
   end
+
+  describe "insert_left" do
+    test "returns an error if called on the root", context do
+      assert Z.insert_left(context.zipper, %Note{note: "bf,16"}) == {:error, :insert_left_of_root}
+    end
+
+    test "inserts the provided node to the left of the current focus, without changing focus", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.insert_left(zipper, %Note{note: "bf,16"})
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "bf,16"},
+        %Note{note: "c4"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+    end
+  end
+
+  describe "insert_right" do
+    test "returns an error if called on the root", context do
+      assert Z.insert_right(context.zipper, %Note{note: "bf,16"}) == {:error, :insert_right_of_root}
+    end
+
+    test "inserts the provided node to the right of the current focus, without changing focus", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.insert_right(zipper, %Note{note: "bf,16"})
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "c4"},
+        %Note{note: "bf,16"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+    end
+  end
+
+  describe "insert_child" do
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.insert_child(zipper, %Note{note: "bf8"}) == {:error, :insert_child_of_leaf}
+    end
+
+    test "adds a node as the leftmost child of the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+
+      zipper = Z.insert_child(zipper, %Note{note: "bf,16"})
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "c4"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "bf,16"},
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+    end
+  end
+
+  describe "append_child" do
+    test "returns an error if called on a leaf", context do
+      zipper = Z.down(context.zipper)
+
+      assert Z.append_child(zipper, %Note{note: "bf8"}) == {:error, :append_child_of_leaf}
+    end
+
+    test "adds a node as the leftmost child of the current focus", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+
+      zipper = Z.append_child(zipper, %Note{note: "bf,16"})
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "c4"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            },
+            %Note{note: "bf,16"}
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+    end
+  end
 end
