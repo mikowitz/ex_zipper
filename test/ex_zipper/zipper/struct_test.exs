@@ -674,4 +674,90 @@ defmodule ExZipper.Zipper.StructTest do
       ]}
     end
   end
+
+  describe "next" do
+    test "navigates to the next node in a depth-first walk", context do
+      zipper = Z.next(context.zipper)
+      assert zipper.focus.note == "c4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.name == "empty"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "d4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.name == "soprano"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "e4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "f4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.name == "soprano2"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "g4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "a4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.name == "alto"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "b4"
+      zipper = Z.next(zipper)
+      assert zipper.focus.note == "c'4"
+      zipper = Z.next(zipper)
+      assert zipper.focus == context.measure
+      assert Z.end?(zipper)
+      zipper = Z.next(zipper)
+      assert zipper.focus == context.measure
+      assert Z.end?(zipper)
+    end
+  end
+
+  describe "prev" do
+    test "navigates to the previous node in a depth-first walk", context do
+      zipper = context.zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next
+
+      assert zipper.focus.note == "c'4"
+      refute Z.end?(zipper)
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "b4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.name == "alto"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "a4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "g4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.name == "soprano2"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "f4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "e4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.name == "soprano"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "d4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.name == "empty"
+      zipper = Z.prev(zipper)
+      assert zipper.focus.note == "c4"
+      zipper = Z.prev(zipper)
+      assert zipper.focus == context.measure
+    end
+
+    test "can't navigate back from the end of the walk", context do
+      zipper = context.zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next
+
+      assert Z.end?(zipper)
+      assert Z.prev(zipper) == {:error, :prev_of_end}
+    end
+  end
+
+  describe "end?" do
+    test "returns true if at the last node of a depth-first walk through the zipper", context do
+      zipper = Z.down(context.zipper)
+
+      refute zipper |> Z.end?
+      refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+      refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+      assert zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+    end
+  end
 end

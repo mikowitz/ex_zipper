@@ -184,4 +184,60 @@ defmodule ExZipper.Zipper do
         %{zipper | focus: new_focus}
     end
   end
+
+  def end?(%__MODULE__{crumbs: :end}), do: true
+  def end?(%__MODULE__{}), do: false
+
+  def next(zipper = %__MODULE__{}) do
+    case end?(zipper) do
+      true -> zipper
+      false ->
+        case down(zipper) do
+          {:error, _} ->
+            case right(zipper) do
+              {:error, _} -> recur_next(zipper)
+              next_zipper -> next_zipper
+            end
+          next_zipper -> next_zipper
+        end
+    end
+  end
+
+  def recur_next(zipper = %__MODULE__{}) do
+    case up(zipper) do
+      {:error, _} -> %{zipper | crumbs: :end}
+      next_zipper ->
+        case right(next_zipper) do
+          {:error, _} -> recur_next(next_zipper)
+          new_zipper -> new_zipper
+        end
+    end
+  end
+
+  def prev(%__MODULE__{crumbs: :end}), do: {:error, :prev_of_end}
+  def prev(zipper = %__MODULE__{}) do
+    case left(zipper) do
+      {:error, _} -> up(zipper)
+      left_zipper -> recur_prev(left_zipper)
+    end
+  end
+
+  def recur_prev(zipper = %__MODULE__{}) do
+    case down(zipper) do
+      {:error, _} -> zipper
+      child -> child |> rightmost |> recur_prev
+    end
+  end
 end
+# (defn prev
+#   "Moves to the previous loc in the hierarchy, depth-first. If already
+#   at the root, returns nil."
+#   {:added "1.0"}
+#   [loc]
+#     (if-let [lloc (left loc)]
+#       (loop [loc lloc]
+#         (if-let [child (and (branch? loc) (down loc))]
+#           (recur (rightmost child))
+#           loc))
+#       (up loc)))
+

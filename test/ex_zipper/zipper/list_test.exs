@@ -333,5 +333,91 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper.focus == [1,[],2,[3,4,[5,6],[7],11],8]
     end
   end
+
+  describe "next" do
+    test "navigates to the next node in a depth-first walk", context do
+      zipper = Z.next(context.zipper)
+      assert zipper.focus == 1
+      zipper = Z.next(zipper)
+      assert zipper.focus == []
+      zipper = Z.next(zipper)
+      assert zipper.focus == 2
+      zipper = Z.next(zipper)
+      assert zipper.focus == [3,4,[5,6],[7]]
+      zipper = Z.next(zipper)
+      assert zipper.focus == 3
+      zipper = Z.next(zipper)
+      assert zipper.focus == 4
+      zipper = Z.next(zipper)
+      assert zipper.focus == [5,6]
+      zipper = Z.next(zipper)
+      assert zipper.focus == 5
+      zipper = Z.next(zipper)
+      assert zipper.focus == 6
+      zipper = Z.next(zipper)
+      assert zipper.focus == [7]
+      zipper = Z.next(zipper)
+      assert zipper.focus == 7
+      zipper = Z.next(zipper)
+      assert zipper.focus == 8
+      zipper = Z.next(zipper)
+      assert zipper.focus == context.list
+      assert Z.end?(zipper)
+      zipper = Z.next(zipper)
+      assert zipper.focus == context.list
+      assert Z.end?(zipper)
+    end
+  end
+
+  describe "prev" do
+    test "navigates to the previous node in a depth-first walk", context do
+      zipper = context.zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next
+
+      assert zipper.focus == 8
+      refute Z.end?(zipper)
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 7
+      zipper = Z.prev(zipper)
+      assert zipper.focus == [7]
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 6
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 5
+      zipper = Z.prev(zipper)
+      assert zipper.focus == [5,6]
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 4
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 3
+      zipper = Z.prev(zipper)
+      assert zipper.focus == [3,4,[5,6],[7]]
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 2
+      zipper = Z.prev(zipper)
+      assert zipper.focus == []
+      zipper = Z.prev(zipper)
+      assert zipper.focus == 1
+      zipper = Z.prev(zipper)
+      assert zipper.focus == context.list
+    end
+
+    test "can't navigate back from the end of the walk", context do
+      zipper = context.zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next
+
+      assert Z.end?(zipper)
+      assert Z.prev(zipper) == {:error, :prev_of_end}
+    end
+  end
+
+  describe "end?" do
+    test "returns true if at the last node of a depth-first walk through the zipper", context do
+      zipper = Z.down(context.zipper)
+
+      refute zipper |> Z.end?
+      refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+      refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+      assert zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+    end
+  end
 end
 

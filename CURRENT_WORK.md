@@ -26,7 +26,7 @@
 - [x] edit
 - [x] insert-child
 - [x] append-child
-- [ ] next
-- [ ] prev
-- [ ] end?
+- [x] next
+- [x] prev
+- [x] end?
 - [ ] remove
