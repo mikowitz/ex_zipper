@@ -29,4 +29,4 @@
 - [x] next
 - [x] prev
 - [x] end?
-- [ ] remove
+- [x] remove

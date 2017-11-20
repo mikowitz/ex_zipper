@@ -419,5 +419,26 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
     end
   end
+
+  describe "remove" do
+    test "returns an error when called on the root", context do
+      assert Z.remove(context.zipper) == {:error, :remove_root}
+    end
+
+    test "removes the current focus, and moves to the prev location in a depth-first walk", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.remove(zipper)
+      assert zipper.focus == [[], 2, [3,4, [5,6], [7]], 8]
+
+      zipper = Z.root(zipper)
+      assert zipper.focus == [[], 2, [3,4, [5,6], [7]], 8]
+
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right |> Z.down |> Z.right
+      zipper = Z.remove(zipper)
+      assert zipper.focus == 3
+      zipper = Z.root(zipper)
+      assert zipper.focus == [1,[],2,[3,[5,6],[7]],8]
+    end
+  end
 end
 

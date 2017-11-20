@@ -228,16 +228,23 @@ defmodule ExZipper.Zipper do
       child -> child |> rightmost |> recur_prev
     end
   end
-end
-# (defn prev
-#   "Moves to the previous loc in the hierarchy, depth-first. If already
-#   at the root, returns nil."
-#   {:added "1.0"}
-#   [loc]
-#     (if-let [lloc (left loc)]
-#       (loop [loc lloc]
-#         (if-let [child (and (branch? loc) (down loc))]
-#           (recur (rightmost child))
-#           loc))
-#       (up loc)))
 
+  def remove(%__MODULE__{crumbs: nil}), do: {:error, :remove_root}
+  def remove(zipper = %__MODULE__{}) do
+    case left(zipper) do
+      {:error, _} ->
+        parent_zipper = up(zipper)
+        [_|new_children] = parent_zipper.functions.children.(parent_zipper.focus)
+        %{parent_zipper |
+          focus: parent_zipper.functions.make_node.(parent_zipper.focus, new_children)
+        }
+      left_zipper ->
+        [_|new_right] = left_zipper.crumbs.right
+        %{left_zipper |
+          crumbs: %{left_zipper.crumbs |
+            right: new_right
+          }
+        }
+    end
+  end
+end

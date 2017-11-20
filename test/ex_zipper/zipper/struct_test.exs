@@ -42,7 +42,6 @@ defmodule ExZipper.Zipper.StructTest do
     zipper = Z.zipper(
       fn map -> Map.has_key?(map, :music) end,
       fn %{music: music} -> music end,
-      # fn node, music -> %{node | music: music} end,
       fn node, music ->
         case Map.has_key?(node, :music) do
           true -> %{node | music: music}
@@ -758,6 +757,100 @@ defmodule ExZipper.Zipper.StructTest do
       refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
       refute zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
       assert zipper |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.next |> Z.end?
+    end
+  end
+
+  describe "remove" do
+    test "returns an error when called on the root", context do
+      assert Z.remove(context.zipper) == {:error, :remove_root}
+    end
+
+    test "removes the current focus, and moves to the prev location in a depth-first walk", context do
+      zipper = Z.down(context.zipper)
+      zipper = Z.remove(zipper)
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+
+      zipper = Z.root(zipper)
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right |> Z.down |> Z.right
+      zipper = Z.remove(zipper)
+      assert zipper.focus == %Note{note: "e4"}
+
+      zipper = Z.root(zipper)
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "c4"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
     end
   end
 end
