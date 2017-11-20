@@ -49,19 +49,28 @@ defmodule ExZipper.Zipper do
   def up(%__MODULE__{crumbs: nil}), do: {:error, :up_from_root}
 
   def up(zipper = %__MODULE__{}) do
-    new_children = Enum.reverse(zipper.crumbs.left) ++ [zipper.focus | zipper.crumbs.right]
+    new_children = Enum.reverse(zipper.crumbs.left) ++
+      [zipper.focus | zipper.crumbs.right]
     [new_focus | _] = zipper.crumbs.ppath
     new_focus = zipper.functions.make_node.(new_focus, new_children)
     %{zipper | focus: new_focus, crumbs: zipper.crumbs.pnodes}
   end
 
   def right(%__MODULE__{crumbs: nil}), do: {:error, :right_from_root}
-  def right(%__MODULE__{crumbs: %{right: []}}), do: {:error, :right_from_rightmost}
+  def right(%__MODULE__{crumbs: %{right: []}}) do
+    {:error, :right_from_rightmost}
+  end
 
   def right(zipper = %__MODULE__{}) do
     [new_focus | new_right] = zipper.crumbs.right
     new_left = [zipper.focus | zipper.crumbs.left]
-    %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | left: new_left, right: new_right}}
+    %{zipper |
+      focus: new_focus,
+      crumbs: %{zipper.crumbs |
+        left: new_left,
+        right: new_right
+      }
+    }
   end
 
   def left(%__MODULE__{crumbs: nil}), do: {:error, :left_from_root}
@@ -70,7 +79,13 @@ defmodule ExZipper.Zipper do
   def left(zipper = %__MODULE__{}) do
     [new_focus | new_left] = zipper.crumbs.left
     new_right = [zipper.focus | zipper.crumbs.right]
-    %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | left: new_left, right: new_right}}
+    %{zipper |
+      focus: new_focus,
+      crumbs: %{zipper.crumbs |
+        left: new_left,
+        right: new_right
+      }
+    }
   end
 
   def rightmost(%__MODULE__{crumbs: nil}), do: {:error, :rightmost_from_root}
@@ -79,7 +94,10 @@ defmodule ExZipper.Zipper do
   def rightmost(zipper = %__MODULE__{}) do
     {new_focus, old_right} = List.pop_at(zipper.crumbs.right, -1)
     new_left = Enum.reverse(old_right) ++ [zipper.focus | zipper.crumbs.left]
-    %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | left: new_left, right: []}}
+    %{zipper |
+      focus: new_focus,
+      crumbs: %{zipper.crumbs | left: new_left, right: []}
+    }
   end
 
   def leftmost(%__MODULE__{crumbs: nil}), do: {:error, :leftmost_from_root}
@@ -88,7 +106,10 @@ defmodule ExZipper.Zipper do
   def leftmost(zipper = %__MODULE__{}) do
     {new_focus, old_left} = List.pop_at(zipper.crumbs.left, -1)
     new_right = Enum.reverse(old_left) ++ [zipper.focus | zipper.crumbs.right]
-    %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | right: new_right, left: []}}
+    %{zipper |
+      focus: new_focus,
+      crumbs: %{zipper.crumbs | right: new_right, left: []}
+    }
   end
 
   def root(zipper = %__MODULE__{crumbs: nil}), do: zipper
@@ -178,15 +199,10 @@ defmodule ExZipper.Zipper do
         zipper
 
       false ->
-        case down(zipper) do
-          {:error, _} ->
-            case right(zipper) do
-              {:error, _} -> recur_next(zipper)
-              next_zipper -> next_zipper
-            end
-
-          next_zipper ->
-            next_zipper
+        case {down(zipper), right(zipper)} do
+          {{:error, _}, {:error, _}} -> recur_next(zipper)
+          {{:error, _}, right_zipper} -> right_zipper
+          {down_zipper, _} -> down_zipper
         end
     end
   end
@@ -226,12 +242,15 @@ defmodule ExZipper.Zipper do
     case left(zipper) do
       {:error, _} ->
         parent_zipper = up(zipper)
-        [_ | new_children] = parent_zipper.functions.children.(parent_zipper.focus)
+        [_ | new_children] = zipper.functions.children.(parent_zipper.focus)
 
-        %{
-          parent_zipper
-          | focus: parent_zipper.functions.make_node.(parent_zipper.focus, new_children)
-        }
+        new_focus =
+          zipper.functions.make_node.(
+            parent_zipper.focus,
+            new_children
+          )
+
+        %{parent_zipper | focus: new_focus}
 
       left_zipper ->
         [_ | new_right] = left_zipper.crumbs.right
