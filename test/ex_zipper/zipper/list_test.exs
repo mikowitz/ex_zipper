@@ -251,4 +251,24 @@ defmodule ExZipper.Zipper.ListTest do
       assert new_node == [4,5,6]
     end
   end
+
+  describe "replace" do
+    test "replaces the current focus, persisting the change when moving back up the zipper", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+      zipper = Z.replace(zipper, [3,4,5,6,7])
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [1,[],2,[3,4,5,6,7],8]
+    end
+  end
+
+  describe "edit" do
+    test "replaces the current focus by applying the provided function, persisting the change when moving back up the zipper", context do
+      zipper = context.zipper |> Z.down |> Z.right |> Z.right |> Z.right
+      zipper = Z.edit(zipper, fn l -> List.flatten(l) end)
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == [1,[],2,[3,4,5,6,7],8]
+    end
+  end
 end

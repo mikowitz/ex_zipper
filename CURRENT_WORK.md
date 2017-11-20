@@ -22,8 +22,8 @@
 ## Editing
 - [ ] insert-left
 - [ ] insert-right
-- [ ] replace
-- [ ] edit
+- [x] replace
+- [x] edit
 - [ ] insert-child
 - [ ] append-child
 - [ ] next

@@ -438,4 +438,74 @@ defmodule ExZipper.Zipper.StructTest do
       assert node_from_leaf == %Voice{name: "", music: [%Note{note: "fs8"}]}
     end
   end
+
+  describe "replace" do
+    test "replaces the current focus, persisting the change when moving back up the zipper", context do
+      zipper = context.zipper |> Z.down |> Z.right
+      zipper = Z.replace(zipper, %Note{note: "cs8"})
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+      %Note{note: "c4"},
+      %Note{note: "cs8"},
+      %Note{note: "d4"},
+      %Voice{
+        name: "soprano",
+        music: [
+          %Note{note: "e4"},
+          %Note{note: "f4"},
+          %Voice{
+            name: "soprano2",
+            music: [
+              %Note{note: "g4"},
+              %Note{note: "a4"}
+            ]
+          },
+          %Voice{
+            name: "alto",
+            music: [
+              %Note{note: "b4"}
+            ]
+          }
+        ]
+      },
+      %Note{note: "c'4"}
+    ]}
+    end
+  end
+
+  describe "edit" do
+    test "replaces the current focus by applying the given function, persisting the change when moving back up the zipper", context do
+      zipper = context.zipper |> Z.down
+      zipper = Z.edit(zipper, (fn note -> %{note | note: "c16"} end))
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == %Measure{time_signature: "4/4", music: [
+        %Note{note: "c16"},
+        %Voice{name: "empty", music: []},
+        %Note{note: "d4"},
+        %Voice{
+          name: "soprano",
+          music: [
+            %Note{note: "e4"},
+            %Note{note: "f4"},
+            %Voice{
+              name: "soprano2",
+              music: [
+                %Note{note: "g4"},
+                %Note{note: "a4"}
+              ]
+            },
+            %Voice{
+              name: "alto",
+              music: [
+                %Note{note: "b4"}
+              ]
+            }
+          ]
+        },
+        %Note{note: "c'4"}
+      ]}
+    end
+  end
 end

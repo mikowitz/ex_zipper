@@ -134,4 +134,12 @@ defmodule ExZipper.Zipper do
   def make_node(zipper = %__MODULE__{}, node, children) do
     zipper.functions.make_node.(node, children)
   end
+
+  def replace(zipper = %__MODULE__{}, new_focus) do
+    %{zipper | focus: new_focus}
+  end
+
+  def edit(zipper = %__MODULE__{}, func) do
+    replace(zipper, func.(zipper.focus))
+  end
 end
