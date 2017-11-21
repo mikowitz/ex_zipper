@@ -2,7 +2,7 @@ defmodule ExZipper.Mixfile do
   use Mix.Project
 
   @name :ex_zipper
-  @version "0.1.0"
+  @version "0.1.1"
 
   @deps [
     {:credo, github: "rrrene/credo", only: [:dev, :test], runtime: false},
@@ -19,7 +19,7 @@ defmodule ExZipper.Mixfile do
     [
       app: @name,
       version: @version,
-      elixir: ">= 1.6.0-dev",
+      elixir: ">= 1.5.0",
       deps: @deps,
       build_embedded: in_production
     ]
