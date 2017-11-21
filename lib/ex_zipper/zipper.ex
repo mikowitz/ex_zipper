@@ -1,9 +1,50 @@
 defmodule ExZipper.Zipper do
   @moduledoc """
+  An Elixir implementation of Huet's Zipper[1], with gratitude to Rich Hickey's
+  Clojure implementation[2].
+
+  Zippers provide a method of navigating and editing a tree while maintaining
+  enough state data to reconstruct the tree from the currently focused node.
+
+  For the most part, functions defined on `ExZipper.Zipper` return either an
+  `ExZipper.Zipper` struct or an error tuple of the form `{:error, :error_type}`,
+  if the function tries to move to a point on the tree that doesn't exist.
+  This allows easy chaining of functions with a quick failure mode if any function
+  in the chain returns an error.
+
+  [1]: [Huet](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf)
+  [2]: [clojure.zip](https://clojure.github.io/clojure/clojure.zip-api.html)
   """
 
   defstruct [:focus, :crumbs, :functions]
 
+  @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}
+  @type error :: {:error, atom}
+  @type maybe_zipper :: Zipper.t | Zipper.error
+
+  @doc """
+  Returns a new zipper with `root` as the root tree of the zipper, and
+  `is_branch`, `children` and `make_node` as the internal functions that
+  define construction parameters for the tree.
+
+  ## Example
+
+      iex> zipper = Zipper.zipper(               # zipper for nested lists
+      ...>   &is_list/1,                         # a branch can have children, so, a list
+      ...>   &(&1),                              # the children of a list is the list itself
+      ...>   fn _node, children -> children end, # a new node is just the new list
+      ...>   [1,[2,3,[4,5]]]
+      ...> )
+      iex> zipper.focus
+      [1,[2,3,[4,5]]]
+
+  """
+  @spec zipper(
+    (any() -> boolean),
+    (any() -> [any()]),
+    (any(), [any()] -> any()),
+    any()
+  ) :: Zipper.t
   def zipper(is_branch, children, make_node, root) do
     %__MODULE__{
       focus: root,
@@ -16,14 +57,40 @@ defmodule ExZipper.Zipper do
     }
   end
 
-  @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}
-  @type error :: {:error, atom}
-  @type zipper_or_error :: Zipper.t | Zipper.error
+  @doc """
+  Returns a new zipper built from the given list
 
+  ## Example
+
+      iex> zipper = Zipper.list_zipper([1,[2,3,[4,5]]])
+      iex> zipper.focus
+      [1,[2,3,[4,5]]]
+
+  """
+  @spec list_zipper(list()) :: Zipper.t
+  def list_zipper(list) when is_list(list) do
+    zipper(
+      &is_list/1,
+      &(&1),
+      fn _node, children -> children end,
+      list
+    )
+  end
+
+  @doc """
+  Returns the current focus of the zipper
+
+      iex> zipper = Zipper.list_zipper([1,[2,3,[4,5]]])
+      iex> Zipper.node(zipper)
+      [1,[2,3,[4,5]]]
+      iex> zipper |> Zipper.down |> Zipper.node
+      1
+
+  """
   @spec node(Zipper.t) :: any
   def node(%__MODULE__{focus: focus}), do: focus
 
-  @spec down(Zipper.t) :: Zipper.zipper_or_error
+  @spec down(Zipper.t) :: Zipper.maybe_zipper
   def down(zipper = %__MODULE__{}) do
     case branch?(zipper) do
       false ->
@@ -53,7 +120,7 @@ defmodule ExZipper.Zipper do
     end
   end
 
-  @spec up(Zipper.t) :: Zipper.zipper_or_error
+  @spec up(Zipper.t) :: Zipper.maybe_zipper
   def up(%__MODULE__{crumbs: nil}), do: {:error, :up_from_root}
   def up(zipper = %__MODULE__{}) do
     new_children = Enum.reverse(zipper.crumbs.left) ++
@@ -63,7 +130,7 @@ defmodule ExZipper.Zipper do
     %{zipper | focus: new_focus, crumbs: zipper.crumbs.pnodes}
   end
 
-  @spec right(Zipper.t) :: Zipper.zipper_or_error
+  @spec right(Zipper.t) :: Zipper.maybe_zipper
   def right(%__MODULE__{crumbs: nil}), do: {:error, :right_from_root}
   def right(%__MODULE__{crumbs: %{right: []}}) do
     {:error, :right_from_rightmost}
@@ -80,7 +147,7 @@ defmodule ExZipper.Zipper do
     }
   end
 
-  @spec left(Zipper.t) :: Zipper.zipper_or_error
+  @spec left(Zipper.t) :: Zipper.maybe_zipper
   def left(%__MODULE__{crumbs: nil}), do: {:error, :left_from_root}
   def left(%__MODULE__{crumbs: %{left: []}}), do: {:error, :left_from_leftmost}
   def left(zipper = %__MODULE__{}) do
@@ -95,7 +162,7 @@ defmodule ExZipper.Zipper do
     }
   end
 
-  @spec rightmost(Zipper.t) :: Zipper.zipper_or_error
+  @spec rightmost(Zipper.t) :: Zipper.maybe_zipper
   def rightmost(%__MODULE__{crumbs: nil}), do: {:error, :rightmost_from_root}
   def rightmost(zipper = %__MODULE__{crumbs: %{right: []}}), do: zipper
   def rightmost(zipper = %__MODULE__{}) do
@@ -107,7 +174,7 @@ defmodule ExZipper.Zipper do
     }
   end
 
-  @spec leftmost(Zipper.t) :: Zipper.zipper_or_error
+  @spec leftmost(Zipper.t) :: Zipper.maybe_zipper
   def leftmost(%__MODULE__{crumbs: nil}), do: {:error, :leftmost_from_root}
   def leftmost(zipper = %__MODULE__{crumbs: %{left: []}}), do: zipper
   def leftmost(zipper = %__MODULE__{}) do
@@ -163,7 +230,7 @@ defmodule ExZipper.Zipper do
     replace(zipper, func.(zipper.focus))
   end
 
-  @spec insert_left(Zipper.t, any()) :: Zipper.zipper_or_error
+  @spec insert_left(Zipper.t, any()) :: Zipper.maybe_zipper
   def insert_left(%__MODULE__{crumbs: nil}, _) do
     {:error, :insert_left_of_root}
   end
@@ -171,7 +238,7 @@ defmodule ExZipper.Zipper do
     %{zipper | crumbs: %{zipper.crumbs | left: [node | zipper.crumbs.left]}}
   end
 
-  @spec insert_right(Zipper.t, any()) :: Zipper.zipper_or_error
+  @spec insert_right(Zipper.t, any()) :: Zipper.maybe_zipper
   def insert_right(%__MODULE__{crumbs: nil}, _) do
     {:error, :insert_right_of_root}
   end
@@ -179,7 +246,7 @@ defmodule ExZipper.Zipper do
     %{zipper | crumbs: %{zipper.crumbs | right: [node | zipper.crumbs.right]}}
   end
 
-  @spec insert_child(Zipper.t, any()) :: Zipper.zipper_or_error
+  @spec insert_child(Zipper.t, any()) :: Zipper.maybe_zipper
   def insert_child(zipper = %__MODULE__{}, new_child) do
     case branch?(zipper) do
       false ->
@@ -192,7 +259,7 @@ defmodule ExZipper.Zipper do
     end
   end
 
-  @spec append_child(Zipper.t, any()) :: Zipper.zipper_or_error
+  @spec append_child(Zipper.t, any()) :: Zipper.maybe_zipper
   def append_child(zipper = %__MODULE__{}, new_child) do
     case branch?(zipper) do
       false ->
@@ -224,7 +291,7 @@ defmodule ExZipper.Zipper do
     end
   end
 
-  @spec prev(Zipper.t) :: Zipper.zipper_or_error
+  @spec prev(Zipper.t) :: Zipper.maybe_zipper
   def prev(%__MODULE__{crumbs: :end}), do: {:error, :prev_of_end}
   def prev(zipper = %__MODULE__{}) do
     case left(zipper) do
@@ -233,7 +300,7 @@ defmodule ExZipper.Zipper do
     end
   end
 
-  @spec remove(Zipper.t) :: Zipper.zipper_or_error
+  @spec remove(Zipper.t) :: Zipper.maybe_zipper
   def remove(%__MODULE__{crumbs: nil}), do: {:error, :remove_root}
   def remove(zipper = %__MODULE__{}) do
     case left(zipper) do
