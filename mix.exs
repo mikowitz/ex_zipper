@@ -7,6 +7,7 @@ defmodule ExZipper.Mixfile do
   @deps [
     {:credo, github: "rrrene/credo", only: [:dev, :test], runtime: false},
     {:mix_test_watch, "~> 0.5.0", only: :dev, runtime: false},
+    {:ex_doc, "~> 0.18.1", only: [:dev, :test], runtime: false},
     {:stream_data, "~> 0.3.0"}
   ]
 
