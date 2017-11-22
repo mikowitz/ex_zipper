@@ -21,7 +21,19 @@ defmodule ExZipper.Mixfile do
       version: @version,
       elixir: ">= 1.5.0",
       deps: @deps,
-      build_embedded: in_production
+      build_embedded: in_production,
+      description: "Huet's zippers in Elixir",
+      source_url: "https://github.com/mikowitz/ex_zipper.git",
+      homepage_url: "https://github.com/mikowitz/ex_zipper.git",
+      package: [
+        licenses: ["MIT"],
+        maintainers: [
+          "Michael Berkowitz <michael.berkowitz@gmail.com>"
+        ],
+        links: %{
+          github: "https://github.com/mikowitz/ex_zipper.git"
+        }
+      ]
     ]
   end
 

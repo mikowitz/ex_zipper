@@ -535,11 +535,9 @@ defmodule ExZipper.Zipper do
     case branch?(zipper) do
       false ->
         {:error, :append_child_of_leaf}
-
       true ->
-        new_focus =
-          make_node(zipper, zipper.focus, children(zipper) ++ [new_child])
-
+        new_children = children(zipper) ++ [new_child]
+        new_focus = make_node(zipper, zipper.focus, new_children)
         %{zipper | focus: new_focus}
     end
   end
@@ -650,11 +648,8 @@ defmodule ExZipper.Zipper do
       {:error, _} ->
         parent_zipper = up(zipper)
         [_ | new_children] = children(parent_zipper)
-
         new_focus = make_node(zipper, parent_zipper.focus, new_children)
-
         %{parent_zipper | focus: new_focus}
-
       left_zipper ->
         [_ | new_right] = left_zipper.crumbs.right
         %{left_zipper | crumbs: %{left_zipper.crumbs | right: new_right}}
