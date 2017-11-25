@@ -12,8 +12,8 @@ defmodule ExZipper.Zipper do
   This allows easy chaining of functions with a quick failure mode if any function
   in the chain returns an error.
 
-  [1]: [Huet](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf)
-  [2]: [clojure.zip](https://clojure.github.io/clojure/clojure.zip-api.html)
+  [1]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
+  [2]: https://clojure.github.io/clojure/clojure.zip-api.html
   """
 
   defstruct [:focus, :crumbs, :functions]
@@ -26,6 +26,13 @@ defmodule ExZipper.Zipper do
   Returns a new zipper with `root` as the root tree of the zipper, and
   `is_branch`, `children` and `make_node` as the internal functions that
   define construction parameters for the tree.
+
+  In order, the arguments are
+
+  1. a function to determine whether a node is a branch
+  1. a function to return the children of a branch node
+  1. a function to create a new node from an existing node and a new set of children
+  1. the root node of the zipper
 
   ## Example
 
