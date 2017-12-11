@@ -2,7 +2,7 @@ defmodule ExZipper.Mixfile do
   use Mix.Project
 
   @name :ex_zipper
-  @version "0.1.2"
+  @version "0.1.3"
 
   @deps [
     {:credo, github: "rrrene/credo", only: [:dev, :test], runtime: false},

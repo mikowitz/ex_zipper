@@ -10,7 +10,7 @@ Clojure implementation[2].
 
 ```elixir
 @deps [
-  ex_zipper: "~> 0.1.2"
+  ex_zipper: "~> 0.1.3"
 ]
 ```
 
