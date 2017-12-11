@@ -663,7 +663,28 @@ defmodule ExZipper.Zipper do
     end
   end
 
+  @doc """
+  Returns a flat list of all the elements in the zipper, ordered via a
+  depth-first walk, including the root
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.to_list(zipper)
+      [[1,[],[2,3,[4,5]]], 1, [], [2,3,[4,5]], 2, 3, [4,5], 4, 5]
+
+  """
+  @spec to_list(Zipper.t) :: [any()]
+  def to_list(zipper = %__MODULE__{}), do: _to_list(zipper, [])
+
   ## Private
+
+  defp _to_list(zipper, acc) do
+    case end?(zipper) do
+      true -> Enum.reverse(acc)
+      false -> _to_list(next(zipper), [__MODULE__.node(zipper)|acc])
+    end
+  end
 
   defp recur_prev(zipper = %__MODULE__{}) do
     case down(zipper) do
