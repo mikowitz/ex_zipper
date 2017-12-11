@@ -94,10 +94,11 @@ a leaf node)
 ### Helper functions
 
 * `Zipper.node/1` returns the zipper's current node
-* `Zipper.lefts` returns a list of the current node's left siblings
-* `Zipper.rights` returns a list of the current node's right siblings
-* `Zipper.path` returns a list of nodes creating a path from the root down to,
+* `Zipper.lefts/1` returns a list of the current node's left siblings
+* `Zipper.rights/1` returns a list of the current node's right siblings
+* `Zipper.path/1` returns a list of nodes creating a path from the root down to,
   but excluding, the current node
+* `Zipper.to_list/1` returns a depth-first walk ordered list of a zipper's elements
 
 * `Zipper.branch?` returns true if the current node is a branch (that is, if it
   can have children, even if it currently does not have any)

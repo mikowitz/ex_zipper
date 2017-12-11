@@ -497,8 +497,7 @@ defmodule ExZipper.Zipper.ListTest do
       assert Zipper.remove(context.zipper) == {:error, :remove_root}
     end
 
-    test "removes the current focus, and moves to the prev location in a depth-first walk",
-         context do
+    test "removes the current focus, and moves to the prev location in a depth-first walk", context do
       zipper = Zipper.down(context.zipper)
       zipper = Zipper.remove(zipper)
       assert zipper.focus == [[], 2, [3, 4, [5, 6], [7]], 8]
@@ -513,6 +512,26 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper.focus == 3
       zipper = Zipper.root(zipper)
       assert zipper.focus == [1, [], 2, [3, [5, 6], [7]], 8]
+    end
+  end
+
+  describe "to_list" do
+    test "returns a depth-first list of all elements in the zipper", context do
+      assert Zipper.to_list(context.zipper) == [
+        [1, [], 2, [3, 4, [5, 6], [7]], 8],
+        1,
+        [],
+        2,
+        [3, 4, [5, 6], [7]],
+        3,
+        4,
+        [5,6],
+        5,
+        6,
+        [7],
+        7,
+        8
+      ]
     end
   end
 end

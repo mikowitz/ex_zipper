@@ -960,4 +960,26 @@ defmodule ExZipper.Zipper.StructTest do
              }
     end
   end
+
+  describe "to_list" do
+    test "returns a depth-first list of all elements in the zipper", context do
+      zipper_list = Z.to_list(context.zipper)
+      assert length(zipper_list) == 13
+      assert Enum.map(zipper_list, &(&1.__struct__)) == [
+        Measure,
+        Note,
+        Voice,
+        Note,
+        Voice,
+        Note,
+        Note,
+        Voice,
+        Note,
+        Note,
+        Voice,
+        Note,
+        Note
+      ]
+    end
+  end
 end
