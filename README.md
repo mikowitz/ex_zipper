@@ -1,10 +1,7 @@
 # ExZipper
 
-An Elixir implementation of Huet's Zipper[1], with gratitude to Rich Hickey's
-Clojure implementation[2].
-
-[1]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
-[2]: https://clojure.github.io/clojure/clojure.zip-api.html
+An Elixir implementation of [Huet's Zipper][huet], with gratitude to Rich Hickey's
+[Clojure implementation][clojure].
 
 ## Installation
 
@@ -30,8 +27,8 @@ For more complex cases, `ExZipper.Zipper.zipper/4` provides a mechanism to
 define your own zipper, passing for its first three arguments functions to
 
 1. determine whether a node is a branch
-1. return the children of a branch node
-1. create a new node from an existing node and a new set of children
+2. return the children of a branch node
+3. create a new node from an existing node and a new set of children
 
 and your root data structure as its fourth argument.
 
@@ -110,7 +107,9 @@ a leaf node)
 
 ## License
 
-Standard MIT. See LICENSE.md
+This library is released under the [UNLICENSE](UNLICENSE).
 
-----
-Created:  2017-11-16Z
+[huet]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
+[clojure]: clojure.github.io/clojure/clojure.zip-api.html
+
+

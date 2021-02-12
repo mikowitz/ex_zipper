@@ -11,17 +11,6 @@ use Mix.Config
 #     config(:logger, level: :info)
 #
 
-# mix_test_watch
-if Mix.env() == :dev do
-  config :mix_test_watch,
-    clear: true,
-    tasks: [
-      "test",
-      "credo --strict",
-      "docs"
-    ]
-end
-
 # Example per-environment config:
 #
-#     import_config("#{Mix.env}.exs")
+import_config("#{Mix.env}.exs")
