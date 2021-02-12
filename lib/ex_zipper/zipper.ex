@@ -100,192 +100,6 @@ defmodule ExZipper.Zipper do
   def node(%__MODULE__{focus: focus}), do: focus
 
   @doc """
-  Moves to the leftmost child of the current focus, or returns an error if
-  the current focus is a leaf or an empty branch.
-
-  ## Example
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.node
-      1
-      iex> zipper |> Zipper.down |> Zipper.down
-      {:error, :down_from_leaf}
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.down
-      {:error, :down_from_empty_branch}
-
-  """
-  @spec down(Zipper.t) :: Zipper.maybe_zipper
-  def down(zipper = %__MODULE__{}) do
-    case branch?(zipper) do
-      false ->
-        {:error, :down_from_leaf}
-
-      true ->
-        case children(zipper) do
-          [] ->
-            {:error, :down_from_empty_branch}
-
-          [new_focus | new_right] ->
-            %__MODULE__{
-              focus: new_focus,
-              crumbs: %{
-                left: [],
-                right: new_right,
-                pnodes: zipper.crumbs,
-                ppath:
-                  case zipper.crumbs do
-                    nil -> [zipper.focus]
-                    crumbs -> [zipper.focus | crumbs.ppath]
-                  end
-              },
-              functions: zipper.functions
-            }
-        end
-    end
-  end
-
-  @doc """
-  Moves up to the parent of the current focus, or returns an error if already
-  at the root of the zipper
-
-  ## Example
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.up(zipper)
-      {:error, :up_from_root}
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.up |> Zipper.node
-      [1,[],[2,3,[4,5]]]
-
-  """
-  @spec up(Zipper.t) :: Zipper.maybe_zipper
-  def up(%__MODULE__{crumbs: nil}), do: {:error, :up_from_root}
-  def up(zipper = %__MODULE__{}) do
-    new_children = Enum.reverse(zipper.crumbs.left) ++
-      [zipper.focus | zipper.crumbs.right]
-    [new_focus | _] = zipper.crumbs.ppath
-    new_focus = make_node(zipper, new_focus, new_children)
-    %{zipper | focus: new_focus, crumbs: zipper.crumbs.pnodes}
-  end
-
-  @doc """
-  Moves to the next sibling to the right of the current focus. Returns an error
-  if at the root or already at the rightmost sibling at its depth in the tree.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.right(zipper)
-      {:error, :right_from_root}
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.node
-      []
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.right
-      {:error, :right_from_rightmost}
-
-  """
-  @spec right(Zipper.t) :: Zipper.maybe_zipper
-  def right(%__MODULE__{crumbs: nil}), do: {:error, :right_from_root}
-  def right(%__MODULE__{crumbs: %{right: []}}) do
-    {:error, :right_from_rightmost}
-  end
-  def right(zipper = %__MODULE__{}) do
-    [new_focus | new_right] = zipper.crumbs.right
-    new_left = [zipper.focus | zipper.crumbs.left]
-    %{zipper |
-      focus: new_focus,
-      crumbs: %{zipper.crumbs |
-        left: new_left,
-        right: new_right
-      }
-    }
-  end
-
-  @doc """
-  Moves to the next sibling to the left of the current focus. Returns an error
-  if at the root or already at the leftmost sibling at its depth in the tree.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.left(zipper)
-      {:error, :left_from_root}
-      iex> zipper |> Zipper.down |> Zipper.left
-      {:error, :left_from_leftmost}
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.left |> Zipper.node
-      []
-
-  """
-  @spec left(Zipper.t) :: Zipper.maybe_zipper
-  def left(%__MODULE__{crumbs: nil}), do: {:error, :left_from_root}
-  def left(%__MODULE__{crumbs: %{left: []}}), do: {:error, :left_from_leftmost}
-  def left(zipper = %__MODULE__{}) do
-    [new_focus | new_left] = zipper.crumbs.left
-    new_right = [zipper.focus | zipper.crumbs.right]
-    %{zipper |
-      focus: new_focus,
-      crumbs: %{zipper.crumbs |
-        left: new_left,
-        right: new_right
-      }
-    }
-  end
-
-  @doc """
-  Moves to the leftmost sibling at the same depth as the current focus. Remains
-  in place if already focused on the leftmost sibling. Returns an error if
-  called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.rightmost(zipper)
-      {:error, :rightmost_from_root}
-      iex> zipper |> Zipper.down |> Zipper.rightmost|> Zipper.node
-      [2,3,[4,5]]
-      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.rightmost |> Zipper.node
-      [2,3,[4,5]]
-
-  """
-  @spec rightmost(Zipper.t) :: Zipper.maybe_zipper
-  def rightmost(%__MODULE__{crumbs: nil}), do: {:error, :rightmost_from_root}
-  def rightmost(zipper = %__MODULE__{crumbs: %{right: []}}), do: zipper
-  def rightmost(zipper = %__MODULE__{}) do
-    {new_focus, old_right} = List.pop_at(zipper.crumbs.right, -1)
-    new_left = Enum.reverse(old_right) ++ [zipper.focus | zipper.crumbs.left]
-    %{zipper |
-      focus: new_focus,
-      crumbs: %{zipper.crumbs | left: new_left, right: []}
-    }
-  end
-
-  @doc """
-  Moves to the leftmost sibling at the same depth as the current focus. Remains
-  in place if already focused on the leftmost sibling. Returns an error if
-  called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.leftmost(zipper)
-      {:error, :leftmost_from_root}
-      iex> zipper |> Zipper.down |> Zipper.leftmost |> Zipper.node
-      1
-      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.leftmost |> Zipper.node
-      1
-
-  """
-  @spec leftmost(Zipper.t) :: Zipper.maybe_zipper
-  def leftmost(%__MODULE__{crumbs: nil}), do: {:error, :leftmost_from_root}
-  def leftmost(zipper = %__MODULE__{crumbs: %{left: []}}), do: zipper
-  def leftmost(zipper = %__MODULE__{}) do
-    {new_focus, old_left} = List.pop_at(zipper.crumbs.left, -1)
-    new_right = Enum.reverse(old_left) ++ [zipper.focus | zipper.crumbs.right]
-    %{zipper |
-      focus: new_focus,
-      crumbs: %{zipper.crumbs | right: new_right, left: []}
-    }
-  end
-
-  @doc """
   Returns to the root of the zipper. Remains in place if already on the root.
 
   ## Examples
@@ -417,137 +231,6 @@ defmodule ExZipper.Zipper do
     zipper.functions.make_node.(node, children)
   end
 
-  @doc """
-  Replaces the current focus with the node passed as the second argument.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper = Zipper.down(zipper)
-      iex> Zipper.node(zipper)
-      1
-      iex> zipper = Zipper.replace(zipper, 10)
-      iex> Zipper.node(zipper)
-      10
-
-  """
-  @spec replace(Zipper.t, any()) :: Zipper.t
-  def replace(zipper = %__MODULE__{}, new_focus) do
-    %{zipper | focus: new_focus}
-  end
-
-  @doc """
-  Replaces the current focus with the result of applying the given function
-  to the current focus
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper = Zipper.down(zipper)
-      iex> Zipper.node(zipper)
-      1
-      iex> zipper = Zipper.edit(zipper, &(&1 * 10))
-      iex> Zipper.node(zipper)
-      10
-
-  """
-  @spec edit(Zipper.t, (any() -> any())) :: Zipper.t
-  def edit(zipper = %__MODULE__{}, func) do
-    replace(zipper, func.(zipper.focus))
-  end
-
-  @doc """
-  Inserts a new node as a new sibling to the immediate left of the current focus.
-  Does not change focus. Returns an error if called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_left(zipper, 0)
-      {:error, :insert_left_of_root}
-      iex> zipper |> Zipper.down |> Zipper.insert_left(0) |> Zipper.root |> Zipper.node
-      [0,1,[],[2,3,[4,5]]]
-
-  """
-  @spec insert_left(Zipper.t, any()) :: Zipper.maybe_zipper
-  def insert_left(%__MODULE__{crumbs: nil}, _) do
-    {:error, :insert_left_of_root}
-  end
-  def insert_left(zipper = %__MODULE__{}, node) do
-    %{zipper | crumbs: %{zipper.crumbs | left: [node | zipper.crumbs.left]}}
-  end
-
-  @doc """
-  Inserts a new node as a new sibling to the immediate right of the current focus.
-  Does not change focus. Returns an error if called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_right(zipper, 0)
-      {:error, :insert_right_of_root}
-      iex> zipper |> Zipper.down |> Zipper.insert_right(0) |> Zipper.root |> Zipper.node
-      [1,0,[],[2,3,[4,5]]]
-
-  """
-  @spec insert_right(Zipper.t, any()) :: Zipper.maybe_zipper
-  def insert_right(%__MODULE__{crumbs: nil}, _) do
-    {:error, :insert_right_of_root}
-  end
-  def insert_right(zipper = %__MODULE__{}, node) do
-    %{zipper | crumbs: %{zipper.crumbs | right: [node | zipper.crumbs.right]}}
-  end
-
-  @doc """
-  Inserts a child as the leftmost child of the current focus. Returns an error
-  if called on a leaf.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.insert_child(6) |> Zipper.node
-      [6,1,[],[2,3,[4,5]]]
-      iex> zipper |> Zipper.down |> Zipper.insert_child(6)
-      {:error, :insert_child_of_leaf}
-
-  """
-  @spec insert_child(Zipper.t, any()) :: Zipper.maybe_zipper
-  def insert_child(zipper = %__MODULE__{}, new_child) do
-    case branch?(zipper) do
-      false ->
-        {:error, :insert_child_of_leaf}
-
-      true ->
-        new_focus =
-          make_node(zipper, zipper.focus, [new_child|children(zipper)])
-        %{zipper | focus: new_focus}
-    end
-  end
-
-  @doc """
-  Appends a child as the rightmost child of the current focus. Returns an error
-  if called on a leaf.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.append_child(6) |> Zipper.node
-      [1,[],[2,3,[4,5]],6]
-      iex> zipper |> Zipper.down |> Zipper.append_child(6)
-      {:error, :append_child_of_leaf}
-
-  """
-  @spec append_child(Zipper.t, any()) :: Zipper.maybe_zipper
-  def append_child(zipper = %__MODULE__{}, new_child) do
-    case branch?(zipper) do
-      false ->
-        {:error, :append_child_of_leaf}
-      true ->
-        new_children = children(zipper) ++ [new_child]
-        new_focus = make_node(zipper, zipper.focus, new_children)
-        %{zipper | focus: new_focus}
-    end
-  end
 
   @doc """
   Returns true if a depth-first walkthrough of the zipper has been exhausted.
@@ -571,97 +254,6 @@ defmodule ExZipper.Zipper do
   def end?(%__MODULE__{crumbs: :end}), do: true
   def end?(%__MODULE__{}), do: false
 
-  @doc """
-  Moves to the next focus in a depth-first walk through the zipper. If it
-  reaches the end, subsequent calls to `next` return the same focus
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.next |> Zipper.node
-      1
-      iex> zipper |> Zipper.next |> Zipper.next |> Zipper.node
-      []
-      iex> zipper |> Zipper.next |> Zipper.next
-      ...> |> Zipper.next |> Zipper.next |> Zipper.node
-      2
-      iex> zipper = zipper |> Zipper.down |> Zipper.rightmost
-      ...> |> Zipper.down |> Zipper.rightmost
-      ...> |> Zipper.down |> Zipper.rightmost
-      iex> zipper |> Zipper.next |> Zipper.node
-      [1,[],[2,3,[4,5]]]
-      iex> zipper |> Zipper.next |> Zipper.next |> Zipper.node
-      [1,[],[2,3,[4,5]]]
-
-  """
-  @spec next(Zipper.t) :: Zipper.t
-  def next(zipper = %__MODULE__{}) do
-    case end?(zipper) do
-      true ->
-        zipper
-      false ->
-        case {down(zipper), right(zipper)} do
-          {{:error, _}, {:error, _}} -> recur_next(zipper)
-          {{:error, _}, right_zipper} -> right_zipper
-          {down_zipper, _} -> down_zipper
-        end
-    end
-  end
-
-  @doc """
-  Moves to the previous focus in a depth-first walk through the zipper. Returns
-  an error if called on the end of the walk. Returns the root if called on
-  the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.prev |> Zipper.node
-      [1,[],[2,3,[4,5]]]
-      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.prev |> Zipper.node
-      []
-      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.down |> Zipper.rightmost
-      ...> |> Zipper.down |> Zipper.rightmost |> Zipper.next |> Zipper.prev
-      {:error, :prev_of_end}
-
-  """
-  @spec prev(Zipper.t) :: Zipper.maybe_zipper
-  def prev(%__MODULE__{crumbs: :end}), do: {:error, :prev_of_end}
-  def prev(zipper = %__MODULE__{crumbs: nil}), do: zipper
-  def prev(zipper = %__MODULE__{}) do
-    case left(zipper) do
-      {:error, _} -> up(zipper)
-      left_zipper -> recur_prev(left_zipper)
-    end
-  end
-
-  @doc """
-  Removes the current focus from the zipper, moving focus to the node previous
-  to the current focus in a depth-first walk. Will return an error if called on the root
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.remove(zipper)
-      {:error, :remove_root}
-      iex> zipper |> Zipper.down |> Zipper.remove |> Zipper.node
-      [[],[2,3,[4,5]]]
-
-  """
-  @spec remove(Zipper.t) :: Zipper.maybe_zipper
-  def remove(%__MODULE__{crumbs: nil}), do: {:error, :remove_root}
-  def remove(zipper = %__MODULE__{}) do
-    case left(zipper) do
-      {:error, _} ->
-        parent_zipper = up(zipper)
-        [_ | new_children] = children(parent_zipper)
-        new_focus = make_node(zipper, parent_zipper.focus, new_children)
-        %{parent_zipper | focus: new_focus}
-      left_zipper ->
-        [_ | new_right] = left_zipper.crumbs.right
-        %{left_zipper | crumbs: %{left_zipper.crumbs | right: new_right}}
-    end
-  end
 
   @doc """
   Returns a flat list of all the elements in the zipper, ordered via a
@@ -677,32 +269,29 @@ defmodule ExZipper.Zipper do
   @spec to_list(Zipper.t) :: [any()]
   def to_list(zipper = %__MODULE__{}), do: _to_list(zipper, [])
 
+  defdelegate down(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate up(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate right(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate left(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate rightmost(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate leftmost(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate next(zipper), to: ExZipper.Zipper.Navigation
+  defdelegate prev(zipper), to: ExZipper.Zipper.Navigation
+
+  defdelegate insert_right(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate insert_left(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate insert_child(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate append_child(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate replace(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate edit(zipper, node), to: ExZipper.Zipper.Editing
+  defdelegate remove(zipper), to: ExZipper.Zipper.Editing
+
   ## Private
 
   defp _to_list(zipper, acc) do
     case end?(zipper) do
       true -> Enum.reverse(acc)
       false -> _to_list(next(zipper), [__MODULE__.node(zipper)|acc])
-    end
-  end
-
-  defp recur_prev(zipper = %__MODULE__{}) do
-    case down(zipper) do
-      {:error, _} -> zipper
-      child -> child |> rightmost |> recur_prev
-    end
-  end
-
-  defp recur_next(zipper = %__MODULE__{}) do
-    case up(zipper) do
-      {:error, _} ->
-        %{zipper | crumbs: :end}
-
-      next_zipper ->
-        case right(next_zipper) do
-          {:error, _} -> recur_next(next_zipper)
-          new_zipper -> new_zipper
-        end
     end
   end
 end
