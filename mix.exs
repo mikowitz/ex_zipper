@@ -6,7 +6,7 @@ defmodule ExZipper.Mixfile do
       app: :ex_zipper,
       name: "ExZipper",
       version: "0.1.3",
-      elixir: ">= 1.5.0",
+      elixir: ">= 1.7.0",
       deps: deps(),
       build_embedded: Mix.env() == :prod,
       description: "Huet's zippers in Elixir",
@@ -17,8 +17,6 @@ defmodule ExZipper.Mixfile do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
-      source_url: "https://github.com/mikowitz/ex_zipper.git",
-      homepage_url: "https://github.com/mikowitz/ex_zipper.git",
       package: package()
     ]
   end
@@ -38,7 +36,6 @@ defmodule ExZipper.Mixfile do
       {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 0.5.0", only: [:dev, :test], runtime: false},
-      {:stream_data, "~> 0.3.0"}
     ]
   end
 
@@ -51,7 +48,7 @@ defmodule ExZipper.Mixfile do
         "Michael Berkowitz <michael.berkowitz@gmail.com>"
       ],
       links: %{
-        github: "https://github.com/mikowitz/ex_zipper.git"
+        "GitHub" => "https://github.com/mikowitz/ex_zipper.git"
       }
     ]
   end

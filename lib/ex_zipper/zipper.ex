@@ -1,7 +1,7 @@
 defmodule ExZipper.Zipper do
   @moduledoc """
-  An Elixir implementation of Huet's Zipper[1], with gratitude to Rich Hickey's
-  Clojure implementation[2].
+  An Elixir implementation of [Huet's Zipper][huet], with gratitude to Rich Hickey's
+  [Clojure implementation][clojure].
 
   Zippers provide a method of navigating and editing a tree while maintaining
   enough state data to reconstruct the tree from the currently focused node.
@@ -12,8 +12,8 @@ defmodule ExZipper.Zipper do
   This allows easy chaining of functions with a quick failure mode if any function
   in the chain returns an error.
 
-  [1]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
-  [2]: https://clojure.github.io/clojure/clojure.zip-api.html
+  [huet]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
+  [clojure]: https://clojure.github.io/clojure/clojure.zip-api.html
   """
 
   defstruct [:focus, :crumbs, :functions]
@@ -30,9 +30,9 @@ defmodule ExZipper.Zipper do
   In order, the arguments are
 
   1. a function to determine whether a node is a branch
-  1. a function to return the children of a branch node
-  1. a function to create a new node from an existing node and a new set of children
-  1. the root node of the zipper
+  2. a function to return the children of a branch node
+  3. a function to create a new node from an existing node and a new set of children
+  4. the root node of the zipper
 
   ## Example
 
