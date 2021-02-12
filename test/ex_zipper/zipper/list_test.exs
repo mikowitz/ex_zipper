@@ -1,8 +1,6 @@
 defmodule ExZipper.Zipper.ListTest do
   use ExUnit.Case, async: true
-  alias ExZipper.Zipper, as: Zipper
-
-  doctest ExZipper.Zipper
+  alias ExZipper.Zipper
 
   setup do
     list = [1, [], 2, [3, 4, [5, 6], [7]], 8]
