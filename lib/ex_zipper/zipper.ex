@@ -20,7 +20,7 @@ defmodule ExZipper.Zipper do
 
   @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}
   @type error :: {:error, atom}
-  @type maybe_zipper :: Zipper.t | Zipper.error
+  @type maybe_zipper :: t | error
 
   @doc """
   Returns a new zipper with `root` as the root tree of the zipper, and
@@ -51,7 +51,7 @@ defmodule ExZipper.Zipper do
     (any() -> [any()]),
     (any(), [any()] -> any()),
     any()
-  ) :: Zipper.t
+  ) :: t
   def zipper(is_branch, children, make_node, root) do
     %__MODULE__{
       focus: root,
@@ -74,7 +74,7 @@ defmodule ExZipper.Zipper do
       [1,[2,3,[4,5]]]
 
   """
-  @spec list_zipper(list()) :: Zipper.t
+  @spec list_zipper(list()) :: t
   def list_zipper(list) when is_list(list) do
     zipper(
       &is_list/1,
@@ -96,7 +96,7 @@ defmodule ExZipper.Zipper do
       1
 
   """
-  @spec node(Zipper.t) :: any
+  @spec node(t) :: any
   def node(%__MODULE__{focus: focus}), do: focus
 
   @doc """
@@ -111,7 +111,7 @@ defmodule ExZipper.Zipper do
       [1,[],[2,3,[4,5]]]
 
   """
-  @spec root(Zipper.t) :: Zipper.t
+  @spec root(t) :: t
   def root(zipper = %__MODULE__{crumbs: nil}), do: zipper
   def root(zipper = %__MODULE__{}), do: zipper |> up |> root
 
@@ -130,7 +130,7 @@ defmodule ExZipper.Zipper do
       [1,[]]
 
   """
-  @spec lefts(Zipper.t) :: [any()] | Zipper.error
+  @spec lefts(t) :: [any()] | error
   def lefts(%__MODULE__{crumbs: nil}), do: {:error, :lefts_of_root}
   def lefts(%__MODULE__{crumbs: %{left: left}}), do: Enum.reverse(left)
 
@@ -149,7 +149,7 @@ defmodule ExZipper.Zipper do
       []
 
   """
-  @spec rights(Zipper.t) :: [any()] | Zipper.error
+  @spec rights(t) :: [any()] | error
   def rights(%__MODULE__{crumbs: nil}), do: {:error, :rights_of_root}
   def rights(%__MODULE__{crumbs: %{right: right}}), do: right
 
@@ -169,7 +169,7 @@ defmodule ExZipper.Zipper do
       [[1,[],[2,3,[4,5]]],[2,3,[4,5]]]
 
   """
-  @spec path(Zipper.t) :: [any()]
+  @spec path(t) :: [any()]
   def path(%__MODULE__{crumbs: nil}), do: []
   def path(%__MODULE__{crumbs: %{ppath: paths}}), do: Enum.reverse(paths)
 
@@ -188,7 +188,7 @@ defmodule ExZipper.Zipper do
       true
 
   """
-  @spec branch?(Zipper.t) :: boolean
+  @spec branch?(t) :: boolean
   def branch?(zipper = %__MODULE__{}) do
     zipper.functions.branch?.(zipper.focus)
   end
@@ -207,7 +207,7 @@ defmodule ExZipper.Zipper do
       []
 
   """
-  @spec children(Zipper.t) :: [any()] | Zipper.error
+  @spec children(t) :: [any()] | error
   def children(zipper = %__MODULE__{}) do
     case branch?(zipper) do
       true -> zipper.functions.children.(zipper.focus)
@@ -226,7 +226,7 @@ defmodule ExZipper.Zipper do
       [10,11,12]
 
   """
-  @spec make_node(Zipper.t, any(), [any()]) :: any()
+  @spec make_node(t, any(), [any()]) :: any()
   def make_node(zipper = %__MODULE__{}, node, children) do
     zipper.functions.make_node.(node, children)
   end
@@ -250,7 +250,7 @@ defmodule ExZipper.Zipper do
       true
 
   """
-  @spec end?(Zipper.t) :: boolean
+  @spec end?(t) :: boolean
   def end?(%__MODULE__{crumbs: :end}), do: true
   def end?(%__MODULE__{}), do: false
 
@@ -266,7 +266,7 @@ defmodule ExZipper.Zipper do
       [[1,[],[2,3,[4,5]]], 1, [], [2,3,[4,5]], 2, 3, [4,5], 4, 5]
 
   """
-  @spec to_list(Zipper.t) :: [any()]
+  @spec to_list(t) :: [any()]
   def to_list(zipper = %__MODULE__{}), do: _to_list(zipper, [])
 
   defdelegate down(zipper), to: ExZipper.Zipper.Navigation
