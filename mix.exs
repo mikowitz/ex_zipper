@@ -35,7 +35,7 @@ defmodule ExZipper.Mixfile do
       {:credo, github: "rrrene/credo", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
-      {:mix_test_watch, "~> 0.5.0", only: [:dev, :test], runtime: false},
+      {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
     ]
   end
 
