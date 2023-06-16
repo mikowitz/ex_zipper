@@ -49,4 +49,13 @@ jobs:
       - if: steps.cache-deps.outputs.cache-hit != 'true'
         run: MIX_ENV=test mix deps.compile
       - run: MIX_ENV=test mix test
+      - uses: actions/cache@v3
+        with:
+          path: |
+            priv/plts
+          key: "${{ runner.os }}-\
+                erlang-${{ matrix.otp }}-\
+                elixir-${{ matrix.elixir }}-\
+                ${{ hashFiles('mix.lock') }}"
+      - run: mix dialyzer
 

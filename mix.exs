@@ -17,7 +17,11 @@ defmodule ExZipper.Mixfile do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
-      package: package()
+      package: package(),
+      dialyzer: [
+        plt_add_deps: :apps_direct,
+        plt_file: {:no_warn, "priv/plts/project.plt"}
+      ]
     ]
   end
 
@@ -36,6 +40,7 @@ defmodule ExZipper.Mixfile do
       {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.3", only: [:dev, :test], runtime: false}
     ]
   end
 
