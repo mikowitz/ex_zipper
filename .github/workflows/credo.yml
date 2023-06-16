@@ -7,27 +7,17 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: "[${{matrix.otp}}/${{matrix.elixir}}] CI Tests"
     strategy:
       matrix:
-        otp: ['20.3', '21.3', '22.2', '23']
-        elixir: ['1.7.4', '1.8.2', '1.9.4', '1.10.4', '1.11.1']
+        otp: ['23.3', '24.3', '25.3']
+        elixir: ['1.12', '1.13', '1.14']
         exclude:
-          - otp: '23'
-            elixir: '1.7.4'
-          - otp: '23'
-            elixir: '1.8.2'
-          - otp: '23'
-            elixir: '1.9.4'
-          - otp: '20.3'
-            elixir: '1.10.4'
-          - otp: '20.3'
-            elixir: '1.11.1'
-          - otp: '21.3'
-            elixir: '1.10.4'
-          - otp: '21.3'
-            elixir: '1.11.1'
+          - otp: '25.3'
+            elixir: '1.12'
+          - otp: '25.3'
+            elixir: '1.13'
     steps:
       - uses: actions/checkout@v3
         with:
