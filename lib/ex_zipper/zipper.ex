@@ -284,6 +284,10 @@ defmodule ExZipper.Zipper do
   defdelegate edit(zipper, node), to: ExZipper.Zipper.Editing
   defdelegate remove(zipper), to: ExZipper.Zipper.Editing
 
+  defdelegate find(zipper, fun), to: ExZipper.Zipper.Traversal
+  defdelegate find_all(zipper, fun), to: ExZipper.Zipper.Traversal
+  defdelegate map(zipper, fun), to: ExZipper.Zipper.Traversal
+
   ## Private
 
   defp _to_list(zipper, acc) do

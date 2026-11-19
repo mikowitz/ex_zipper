@@ -570,4 +570,150 @@ defmodule ExZipper.Zipper.ListTest do
              ]
     end
   end
+
+  describe "find" do
+    test "returns a zipper focused on the first node in a depth-first walk matching the predicate",
+         context do
+      zipper = Zipper.find(context.zipper, fn node -> is_integer(node) and node > 2 end)
+
+      assert zipper.focus == 3
+      assert Zipper.path(zipper) == [context.list, [3, 4, [5, 6], [7]]]
+    end
+
+    test "considers the current focus as a possible match", context do
+      zipper = Zipper.find(context.zipper, &is_list/1)
+
+      assert zipper.focus == context.list
+      assert zipper.crumbs == nil
+    end
+
+    test "searches from the current focus to the end of the walk, not the whole tree", context do
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+
+      assert Zipper.find(zipper, &(&1 == 1)) == {:error, :not_found}
+      assert Zipper.find(zipper, &(&1 == 8)).focus == 8
+    end
+
+    test "can be combined with next to find successive matches", context do
+      even? = fn node -> is_integer(node) and rem(node, 2) == 0 end
+
+      zipper = Zipper.find(context.zipper, even?)
+      assert zipper.focus == 2
+
+      zipper = zipper |> Zipper.next() |> Zipper.find(even?)
+      assert zipper.focus == 4
+    end
+
+    test "returns a zipper whose focus can be edited and persisted back to the root", context do
+      zipper =
+        context.zipper
+        |> Zipper.find(&(&1 == [5, 6]))
+        |> Zipper.replace(:replaced)
+        |> Zipper.root()
+
+      assert zipper.focus == [1, [], 2, [3, 4, :replaced, [7]], 8]
+    end
+
+    test "returns an error if no node matches the predicate", context do
+      assert Zipper.find(context.zipper, &(&1 == 99)) == {:error, :not_found}
+    end
+
+    test "returns an error if called on the end of the walk", context do
+      zipper = %{context.zipper | crumbs: :end}
+
+      assert Zipper.find(zipper, fn _ -> true end) == {:error, :not_found}
+    end
+  end
+
+  describe "find_all" do
+    test "returns a list of zippers focused on every node matching the predicate, in depth-first order",
+         context do
+      zippers =
+        Zipper.find_all(context.zipper, fn node -> is_integer(node) and rem(node, 2) == 0 end)
+
+      assert Enum.map(zippers, &Zipper.node/1) == [2, 4, 6, 8]
+    end
+
+    test "returns zippers positioned at each match within the tree", context do
+      [zipper] = Zipper.find_all(context.zipper, &(&1 == 6))
+
+      assert Zipper.path(zipper) == [context.list, [3, 4, [5, 6], [7]], [5, 6]]
+      assert Zipper.lefts(zipper) == [5]
+      assert Zipper.rights(zipper) == []
+    end
+
+    test "searches from the current focus to the end of the walk, not the whole tree", context do
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+
+      zippers = Zipper.find_all(zipper, fn node -> is_integer(node) and rem(node, 2) == 0 end)
+
+      assert Enum.map(zippers, &Zipper.node/1) == [4, 6, 8]
+    end
+
+    test "returns an empty list if no node matches the predicate", context do
+      assert Zipper.find_all(context.zipper, &(&1 == 99)) == []
+    end
+  end
+
+  describe "map" do
+    test "applies the function to every node in a depth-first walk, returning a zipper at the root",
+         context do
+      zipper =
+        Zipper.map(context.zipper, fn
+          node when is_integer(node) -> node * 10
+          node -> node
+        end)
+
+      assert zipper.focus == [10, [], 20, [30, 40, [50, 60], [70]], 80]
+      assert zipper.crumbs == nil
+      refute Zipper.end?(zipper)
+    end
+
+    test "visits every node, branches included, in depth-first order", context do
+      test_pid = self()
+
+      Zipper.map(context.zipper, fn node ->
+        send(test_pid, {:visited, node})
+        node
+      end)
+
+      visited =
+        for _ <- Zipper.to_list(context.zipper) do
+          assert_received {:visited, node}
+          node
+        end
+
+      assert visited == Zipper.to_list(context.zipper)
+      refute_received {:visited, _}
+    end
+
+    test "transforms a branch before walking into its new children", context do
+      zipper =
+        Zipper.map(context.zipper, fn
+          [7] -> [7, 9]
+          9 -> :nine
+          node -> node
+        end)
+
+      assert zipper.focus == [1, [], 2, [3, 4, [5, 6], [7, :nine]], 8]
+    end
+
+    test "transforms only the nodes from the current focus to the end of the walk", context do
+      zipper =
+        context.zipper
+        |> Zipper.down()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.map(fn
+          node when is_integer(node) -> node * 10
+          node -> node
+        end)
+
+      assert zipper.focus == [1, [], 2, [30, 40, [50, 60], [70]], 80]
+      assert zipper.crumbs == nil
+    end
+  end
 end

@@ -983,4 +983,120 @@ defmodule ExZipper.Zipper.StructTest do
              ]
     end
   end
+
+  describe "find" do
+    test "returns a zipper focused on the first node in a depth-first walk matching the predicate",
+         context do
+      zipper = Z.find(context.zipper, &match?(%Voice{name: "soprano2"}, &1))
+
+      assert zipper.focus == %Voice{
+               name: "soprano2",
+               music: [
+                 %Note{note: "g4"},
+                 %Note{note: "a4"}
+               ]
+             }
+
+      assert Enum.map(Z.lefts(zipper), & &1.note) == ["e4", "f4"]
+    end
+
+    test "returns a zipper whose focus can be edited and persisted back to the root", context do
+      zipper =
+        context.zipper
+        |> Z.find(&match?(%Note{note: "b4"}, &1))
+        |> Z.edit(fn note -> %{note | note: "b16"} end)
+        |> Z.root()
+
+      assert zipper.focus == %Measure{
+               time_signature: "4/4",
+               music: [
+                 %Note{note: "c4"},
+                 %Voice{name: "empty", music: []},
+                 %Note{note: "d4"},
+                 %Voice{
+                   name: "soprano",
+                   music: [
+                     %Note{note: "e4"},
+                     %Note{note: "f4"},
+                     %Voice{
+                       name: "soprano2",
+                       music: [
+                         %Note{note: "g4"},
+                         %Note{note: "a4"}
+                       ]
+                     },
+                     %Voice{
+                       name: "alto",
+                       music: [
+                         %Note{note: "b16"}
+                       ]
+                     }
+                   ]
+                 },
+                 %Note{note: "c'4"}
+               ]
+             }
+    end
+
+    test "returns an error if no node matches the predicate", context do
+      assert Z.find(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == {:error, :not_found}
+    end
+  end
+
+  describe "find_all" do
+    test "returns a list of zippers focused on every node matching the predicate, in depth-first order",
+         context do
+      zippers = Z.find_all(context.zipper, &match?(%Voice{}, &1))
+
+      assert Enum.map(zippers, &Z.node(&1).name) == ["empty", "soprano", "soprano2", "alto"]
+    end
+
+    test "returns an empty list if no node matches the predicate", context do
+      assert Z.find_all(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == []
+    end
+  end
+
+  describe "map" do
+    test "applies the function to every node in a depth-first walk, returning a zipper at the root",
+         context do
+      zipper =
+        Z.map(context.zipper, fn
+          note = %Note{} -> %{note | note: String.upcase(note.note)}
+          voice = %Voice{} -> %{voice | name: String.upcase(voice.name)}
+          node -> node
+        end)
+
+      assert zipper.crumbs == nil
+
+      assert zipper.focus == %Measure{
+               time_signature: "4/4",
+               music: [
+                 %Note{note: "C4"},
+                 %Voice{name: "EMPTY", music: []},
+                 %Note{note: "D4"},
+                 %Voice{
+                   name: "SOPRANO",
+                   music: [
+                     %Note{note: "E4"},
+                     %Note{note: "F4"},
+                     %Voice{
+                       name: "SOPRANO2",
+                       music: [
+                         %Note{note: "G4"},
+                         %Note{note: "A4"}
+                       ]
+                     },
+                     %Voice{
+                       name: "ALTO",
+                       music: [
+                         %Note{note: "B4"}
+                       ]
+                     }
+                   ]
+                 },
+                 %Note{note: "C'4"}
+               ]
+             }
+    end
+  end
 end
