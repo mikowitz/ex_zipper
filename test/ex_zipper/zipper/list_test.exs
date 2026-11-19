@@ -52,7 +52,14 @@ defmodule ExZipper.Zipper.ListTest do
     end
 
     test "returns an error if called on the rightmost sibling", context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+      zipper =
+        context.zipper
+        |> Zipper.down()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.right()
+
       assert Zipper.right(zipper) == {:error, :right_from_rightmost}
     end
 
@@ -187,7 +194,13 @@ defmodule ExZipper.Zipper.ListTest do
     end
 
     test "returns to the root from the current focus", context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right() |> Zipper.down()
+      zipper =
+        context.zipper
+        |> Zipper.down()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.down()
 
       assert Zipper.root(zipper) == context.zipper
     end
@@ -280,7 +293,9 @@ defmodule ExZipper.Zipper.ListTest do
   describe "replace" do
     test "replaces the current focus, persisting the change when moving back up the zipper",
          context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+
       zipper = Zipper.replace(zipper, [3, 4, 5, 6, 7])
       zipper = Zipper.root(zipper)
 
@@ -291,7 +306,9 @@ defmodule ExZipper.Zipper.ListTest do
   describe "edit" do
     test "replaces the current focus by applying the provided function, persisting the change when moving back up the zipper",
          context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+
       zipper = Zipper.edit(zipper, fn l -> List.flatten(l) end)
       zipper = Zipper.root(zipper)
 
@@ -337,7 +354,8 @@ defmodule ExZipper.Zipper.ListTest do
     end
 
     test "adds a node as the leftmost child of the current focus", context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
 
       zipper = Zipper.insert_child(zipper, 11)
       zipper = Zipper.root(zipper)
@@ -354,7 +372,8 @@ defmodule ExZipper.Zipper.ListTest do
     end
 
     test "adds a node as the rightmost child of the current focus", context do
-      zipper = context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
+      zipper =
+        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
 
       zipper = Zipper.append_child(zipper, 11)
       zipper = Zipper.root(zipper)
@@ -470,8 +489,20 @@ defmodule ExZipper.Zipper.ListTest do
       zipper = Zipper.down(context.zipper)
 
       refute zipper |> Zipper.end?()
-      refute zipper |> Zipper.next() |> Zipper.next() |> Zipper.next() |> Zipper.next() |> Zipper.end?()
-      refute zipper |> Zipper.next() |> Zipper.next() |> Zipper.next() |> Zipper.next() |> Zipper.end?()
+
+      refute zipper
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.end?()
+
+      refute zipper
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.next()
+             |> Zipper.end?()
 
       assert zipper
              |> Zipper.next()
@@ -495,7 +526,8 @@ defmodule ExZipper.Zipper.ListTest do
       assert Zipper.remove(context.zipper) == {:error, :remove_root}
     end
 
-    test "removes the current focus, and moves to the prev location in a depth-first walk", context do
+    test "removes the current focus, and moves to the prev location in a depth-first walk",
+         context do
       zipper = Zipper.down(context.zipper)
       zipper = Zipper.remove(zipper)
       assert zipper.focus == [[], 2, [3, 4, [5, 6], [7]], 8]
@@ -504,7 +536,13 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper.focus == [[], 2, [3, 4, [5, 6], [7]], 8]
 
       zipper =
-        context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right() |> Zipper.down() |> Zipper.right()
+        context.zipper
+        |> Zipper.down()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.right()
+        |> Zipper.down()
+        |> Zipper.right()
 
       zipper = Zipper.remove(zipper)
       assert zipper.focus == 3
@@ -516,20 +554,20 @@ defmodule ExZipper.Zipper.ListTest do
   describe "to_list" do
     test "returns a depth-first list of all elements in the zipper", context do
       assert Zipper.to_list(context.zipper) == [
-        [1, [], 2, [3, 4, [5, 6], [7]], 8],
-        1,
-        [],
-        2,
-        [3, 4, [5, 6], [7]],
-        3,
-        4,
-        [5, 6],
-        5,
-        6,
-        [7],
-        7,
-        8
-      ]
+               [1, [], 2, [3, 4, [5, 6], [7]], 8],
+               1,
+               [],
+               2,
+               [3, 4, [5, 6], [7]],
+               3,
+               4,
+               [5, 6],
+               5,
+               6,
+               [7],
+               7,
+               8
+             ]
     end
   end
 end

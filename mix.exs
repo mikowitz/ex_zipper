@@ -6,17 +6,11 @@ defmodule ExZipper.Mixfile do
       app: :ex_zipper,
       name: "ExZipper",
       version: "0.1.3",
-      elixir: ">= 1.7.0",
+      elixir: ">= 1.20.0",
       deps: deps(),
       build_embedded: Mix.env() == :prod,
       description: "Huet's zippers in Elixir",
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ],
       package: package()
     ]
   end
@@ -30,12 +24,24 @@ defmodule ExZipper.Mixfile do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        "test.interactive": :test,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
+    ]
+  end
+
   defp deps do
     [
-      {:credo, github: "rrrene/credo", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.10", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.21", only: [:dev, :test], runtime: false},
-      {:mix_test_watch, "~> 0.5.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18.5", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.34", only: [:dev, :test], runtime: false},
+      {:mix_test_interactive, "~> 6.0", only: [:dev, :test], runtime: false}
     ]
   end
 
