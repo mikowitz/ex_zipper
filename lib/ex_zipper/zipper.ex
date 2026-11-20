@@ -16,6 +16,8 @@ defmodule ExZipper.Zipper do
   [clojure]: https://clojure.github.io/clojure/clojure.zip-api.html
   """
 
+  alias ExZipper.Zipper
+
   defstruct [:focus, :crumbs, :functions]
 
   @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}

@@ -11,23 +11,19 @@ jobs:
     name: "[${{matrix.otp}}/${{matrix.elixir}}] CI Tests"
     strategy:
       matrix:
-        otp: ['20.3', '21.3', '22.2', '23']
-        elixir: ['1.7.4', '1.8.2', '1.9.4', '1.10.4', '1.11.1']
+        otp: [27, 28, 29]
+        elixir: ['1.17', '1.18', '1.19', '1.20']
         exclude:
-          - otp: '23'
-            elixir: '1.7.4'
-          - otp: '23'
-            elixir: '1.8.2'
-          - otp: '23'
-            elixir: '1.9.4'
-          - otp: '20.3'
-            elixir: '1.10.4'
-          - otp: '20.3'
-            elixir: '1.11.1'
-          - otp: '21.3'
-            elixir: '1.10.4'
-          - otp: '21.3'
-            elixir: '1.11.1'
+          - elixir: '1.17'
+            otp: 28
+          - elixir: '1.17'
+            otp: 29
+          - elixir: '1.18'
+            otp: 28
+          - elixir: '1.18'
+            otp: 29
+          - elixir: '1.19'
+            otp: 29
     steps:
       - uses: actions/checkout@v2.3.1
         with:

@@ -6,7 +6,7 @@ defmodule ExZipper.Mixfile do
       app: :ex_zipper,
       name: "ExZipper",
       version: "0.2.0",
-      elixir: ">= 1.20.0",
+      elixir: ">= 1.17.0",
       deps: deps(),
       build_embedded: Mix.env() == :prod,
       description: "Huet's zippers in Elixir",
@@ -39,6 +39,7 @@ defmodule ExZipper.Mixfile do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18.5", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: [:dev, :test], runtime: false},
       {:mix_test_interactive, "~> 6.0", only: [:dev, :test], runtime: false}
