@@ -295,6 +295,19 @@ defmodule ExZipper.Zipper.StructTest do
 
       assert Z.root(zipper) == context.zipper
     end
+
+    test "returns to the root from the end of a depth-first walk", context do
+      zipper =
+        context.zipper
+        |> Stream.iterate(&Z.next/1)
+        |> Enum.find(&Z.end?/1)
+
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == context.measure
+      assert zipper.crumbs == nil
+      refute Z.end?(zipper)
+    end
   end
 
   describe "lefts" do

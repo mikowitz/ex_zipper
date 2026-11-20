@@ -204,6 +204,33 @@ defmodule ExZipper.Zipper.ListTest do
 
       assert Zipper.root(zipper) == context.zipper
     end
+
+    test "returns to the root from the end of a depth-first walk", context do
+      zipper =
+        context.zipper
+        |> Stream.iterate(&Zipper.next/1)
+        |> Enum.find(&Zipper.end?/1)
+
+      zipper = Zipper.root(zipper)
+
+      assert zipper.focus == context.list
+      assert zipper.crumbs == nil
+      refute Zipper.end?(zipper)
+    end
+
+    test "persists edits made before reaching the end of a depth-first walk", context do
+      zipper =
+        context.zipper
+        |> Zipper.find(&(&1 == [5, 6]))
+        |> Zipper.replace(:replaced)
+        |> Stream.iterate(&Zipper.next/1)
+        |> Enum.find(&Zipper.end?/1)
+
+      zipper = Zipper.root(zipper)
+
+      assert zipper.focus == [1, [], 2, [3, 4, :replaced, [7]], 8]
+      assert zipper.crumbs == nil
+    end
   end
 
   describe "lefts" do
@@ -714,6 +741,18 @@ defmodule ExZipper.Zipper.ListTest do
 
       assert zipper.focus == [1, [], 2, [30, 40, [50, 60], [70]], 80]
       assert zipper.crumbs == nil
+    end
+
+    test "returns the unchanged tree at the root if called on the end of the walk", context do
+      zipper =
+        context.zipper
+        |> Stream.iterate(&Zipper.next/1)
+        |> Enum.find(&Zipper.end?/1)
+        |> Zipper.map(fn _ -> :should_not_be_applied end)
+
+      assert zipper.focus == context.list
+      assert zipper.crumbs == nil
+      refute Zipper.end?(zipper)
     end
   end
 end

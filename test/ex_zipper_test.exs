@@ -6,4 +6,5 @@ defmodule ExZipperTest do
   doctest ExZipper.Zipper
   doctest ExZipper.Zipper.Navigation
   doctest ExZipper.Zipper.Editing
+  doctest ExZipper.Zipper.Traversal
 end

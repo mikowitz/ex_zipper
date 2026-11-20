@@ -113,6 +113,7 @@ defmodule ExZipper.Zipper do
   """
   @spec root(Zipper.t()) :: Zipper.t()
   def root(zipper = %__MODULE__{crumbs: nil}), do: zipper
+  def root(zipper = %__MODULE__{crumbs: :end}), do: %{zipper | crumbs: nil}
   def root(zipper = %__MODULE__{}), do: zipper |> up |> root
 
   @doc """
