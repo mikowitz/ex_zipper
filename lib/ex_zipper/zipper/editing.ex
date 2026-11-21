@@ -20,7 +20,7 @@ defmodule ExZipper.Zipper.Editing do
 
   """
   @spec replace(Zipper.t(), any()) :: Zipper.t()
-  def replace(zipper = %Zipper{}, new_focus) do
+  def replace(%Zipper{} = zipper, new_focus) do
     %{zipper | focus: new_focus}
   end
 
@@ -40,7 +40,7 @@ defmodule ExZipper.Zipper.Editing do
 
   """
   @spec edit(Zipper.t(), (any() -> any())) :: Zipper.t()
-  def edit(zipper = %Zipper{}, func) do
+  def edit(%Zipper{} = zipper, func) do
     replace(zipper, func.(zipper.focus))
   end
 
@@ -64,7 +64,7 @@ defmodule ExZipper.Zipper.Editing do
     ExZipper.raise_error(:insert_left_of_root, zipper)
   end
 
-  def insert_left(zipper = %Zipper{}, node) do
+  def insert_left(%Zipper{} = zipper, node) do
     %{zipper | crumbs: %{zipper.crumbs | left: [node | zipper.crumbs.left]}}
   end
 
@@ -88,7 +88,7 @@ defmodule ExZipper.Zipper.Editing do
     ExZipper.raise_error(:insert_right_of_root, zipper)
   end
 
-  def insert_right(zipper = %Zipper{}, node) do
+  def insert_right(%Zipper{} = zipper, node) do
     %{zipper | crumbs: %{zipper.crumbs | right: [node | zipper.crumbs.right]}}
   end
 
@@ -108,7 +108,7 @@ defmodule ExZipper.Zipper.Editing do
 
   """
   @spec insert_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
-  def insert_child(zipper = %Zipper{}, new_child) do
+  def insert_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
         ExZipper.raise_error(:insert_child_of_leaf, zipper)
@@ -137,7 +137,7 @@ defmodule ExZipper.Zipper.Editing do
 
   """
   @spec append_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
-  def append_child(zipper = %Zipper{}, new_child) do
+  def append_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
         ExZipper.raise_error(:append_child_of_leaf, zipper)
@@ -167,7 +167,7 @@ defmodule ExZipper.Zipper.Editing do
   @spec remove(Zipper.t()) :: Zipper.maybe_zipper()
   def remove(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:remove_root, zipper)
 
-  def remove(zipper = %Zipper{}) do
+  def remove(%Zipper{} = zipper) do
     case Zipper.Navigation.left?(zipper) do
       false ->
         parent_zipper = Zipper.up(zipper)

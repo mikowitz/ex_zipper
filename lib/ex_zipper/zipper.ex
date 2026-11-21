@@ -114,9 +114,9 @@ defmodule ExZipper.Zipper do
 
   """
   @spec root(Zipper.t()) :: Zipper.t()
-  def root(zipper = %__MODULE__{crumbs: nil}), do: zipper
-  def root(zipper = %__MODULE__{crumbs: :end}), do: %{zipper | crumbs: nil}
-  def root(zipper = %__MODULE__{}), do: zipper |> up |> root
+  def root(%__MODULE__{crumbs: nil} = zipper), do: zipper
+  def root(%__MODULE__{crumbs: :end} = zipper), do: %{zipper | crumbs: nil}
+  def root(%__MODULE__{} = zipper), do: zipper |> up |> root
 
   @doc """
   Returns all left siblings of the current focus. Returns an error if called
@@ -196,7 +196,7 @@ defmodule ExZipper.Zipper do
 
   """
   @spec branch?(Zipper.t()) :: boolean
-  def branch?(zipper = %__MODULE__{}) do
+  def branch?(%__MODULE__{} = zipper) do
     zipper.functions.branch?.(zipper.focus)
   end
 
@@ -219,7 +219,7 @@ defmodule ExZipper.Zipper do
 
   """
   @spec children(Zipper.t()) :: [any()] | Zipper.error()
-  def children(zipper = %__MODULE__{}) do
+  def children(%__MODULE__{} = zipper) do
     case branch?(zipper) do
       true -> zipper.functions.children.(zipper.focus)
       false -> ExZipper.raise_error(:children_of_leaf, zipper)
@@ -238,7 +238,7 @@ defmodule ExZipper.Zipper do
 
   """
   @spec make_node(Zipper.t(), any(), [any()]) :: any()
-  def make_node(zipper = %__MODULE__{}, node, children) do
+  def make_node(%__MODULE__{} = zipper, node, children) do
     zipper.functions.make_node.(node, children)
   end
 
@@ -276,7 +276,7 @@ defmodule ExZipper.Zipper do
 
   """
   @spec to_list(Zipper.t()) :: [any()]
-  def to_list(zipper = %__MODULE__{}), do: _to_list(zipper, [])
+  def to_list(%__MODULE__{} = zipper), do: _to_list(zipper, [])
 
   defdelegate down(zipper), to: ExZipper.Zipper.Navigation
   defdelegate up(zipper), to: ExZipper.Zipper.Navigation
