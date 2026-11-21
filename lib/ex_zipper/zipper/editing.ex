@@ -56,7 +56,7 @@ defmodule ExZipper.Zipper.Editing do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.insert_left(zipper, 0)
-      ** (ExZipper.Error) insert_left_of_root
+      ** (ExZipper.Error) Cannot insert to the left of the root
 
   """
   @spec insert_left(Zipper.t(), any()) :: Zipper.maybe_zipper()
@@ -80,7 +80,7 @@ defmodule ExZipper.Zipper.Editing do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.insert_right(zipper, 0)
-      ** (ExZipper.Error) insert_right_of_root
+      ** (ExZipper.Error) Cannot insert to the right of the root
 
   """
   @spec insert_right(Zipper.t(), any()) :: Zipper.maybe_zipper()
@@ -104,7 +104,7 @@ defmodule ExZipper.Zipper.Editing do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.insert_child(6)
-      ** (ExZipper.Error) insert_child_of_leaf
+      ** (ExZipper.Error) Cannot insert a child into a leaf
 
   """
   @spec insert_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
@@ -133,7 +133,7 @@ defmodule ExZipper.Zipper.Editing do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.append_child(6)
-      ** (ExZipper.Error) append_child_of_leaf
+      ** (ExZipper.Error) Cannot append a child to a leaf
 
   """
   @spec append_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
@@ -161,7 +161,7 @@ defmodule ExZipper.Zipper.Editing do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.remove(zipper)
-      ** (ExZipper.Error) remove_root
+      ** (ExZipper.Error) Cannot remove root
 
   """
   @spec remove(Zipper.t()) :: Zipper.maybe_zipper()

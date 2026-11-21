@@ -39,6 +39,12 @@ defmodule ExZipper.ErrorTest do
       end
     end
 
+    test "falls back to a generic message for an unknown reason" do
+      message = Exception.message(ExZipper.Error.exception(reason: :something_else))
+
+      assert message == "ExZipper error: :something_else"
+    end
+
     test "gives every reason a different message" do
       messages = Enum.map(@reasons, &Exception.message(ExZipper.Error.exception(reason: &1)))
 

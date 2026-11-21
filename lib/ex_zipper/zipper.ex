@@ -132,7 +132,7 @@ defmodule ExZipper.Zipper do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.lefts(zipper)
-      ** (ExZipper.Error) lefts_of_root
+      ** (ExZipper.Error) Cannot query lefts of the root
 
   """
   @spec lefts(Zipper.t()) :: [any()] | Zipper.error()
@@ -153,7 +153,7 @@ defmodule ExZipper.Zipper do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.rights(zipper)
-      ** (ExZipper.Error) rights_of_root
+      ** (ExZipper.Error) Cannot query rights of the root
 
   """
   @spec rights(Zipper.t()) :: [any()] | Zipper.error()
@@ -215,7 +215,7 @@ defmodule ExZipper.Zipper do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.children
-      ** (ExZipper.Error) children_of_leaf
+      ** (ExZipper.Error) Cannot query children of a leaf
 
   """
   @spec children(Zipper.t()) :: [any()] | Zipper.error()

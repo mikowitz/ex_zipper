@@ -17,11 +17,11 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.down
-      ** (ExZipper.Error) down_from_leaf
+      ** (ExZipper.Error) Cannot move down into a leaf
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.down
-      ** (ExZipper.Error) down_from_empty_branch
+      ** (ExZipper.Error) Cannot move down onto an empty branch
 
   """
   @spec down(Zipper.t()) :: Zipper.maybe_zipper()
@@ -70,7 +70,7 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.up(zipper)
-      ** (ExZipper.Error) up_from_root
+      ** (ExZipper.Error) Cannot move up from the root
 
   """
   @spec up(Zipper.t()) :: Zipper.maybe_zipper()
@@ -101,12 +101,12 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.right
-      ** (ExZipper.Error) right_from_rightmost
+      ** (ExZipper.Error) Already at the rightmost member
 
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.right(zipper)
-      ** (ExZipper.Error) right_from_root
+      ** (ExZipper.Error) Cannot move right from the root
 
   """
   @spec right(Zipper.t()) :: Zipper.maybe_zipper()
@@ -134,7 +134,7 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.left
-      ** (ExZipper.Error) left_from_leftmost
+      ** (ExZipper.Error) Already at the leftmost member
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.left |> Zipper.node
@@ -142,7 +142,7 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.left(zipper)
-      ** (ExZipper.Error) left_from_root
+      ** (ExZipper.Error) Cannot move left from the root
 
   """
   @spec left(Zipper.t()) :: Zipper.maybe_zipper()
@@ -176,7 +176,7 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.rightmost(zipper)
-      ** (ExZipper.Error) rightmost_from_root
+      ** (ExZipper.Error) Cannot call rightmost from the root
 
   """
   @spec rightmost(Zipper.t()) :: Zipper.maybe_zipper()
@@ -207,7 +207,7 @@ defmodule ExZipper.Zipper.Navigation do
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.leftmost(zipper)
-      ** (ExZipper.Error) leftmost_from_root
+      ** (ExZipper.Error) Cannot call leftmost from the root
 
   """
   @spec leftmost(Zipper.t()) :: Zipper.maybe_zipper()
@@ -276,7 +276,7 @@ defmodule ExZipper.Zipper.Navigation do
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.down |> Zipper.rightmost
       ...> |> Zipper.down |> Zipper.rightmost |> Zipper.next |> Zipper.prev
-      ** (ExZipper.Error) prev_of_end
+      ** (ExZipper.Error) Cannot call previous from the end
 
   """
   @spec prev(Zipper.t()) :: Zipper.maybe_zipper()
