@@ -22,6 +22,8 @@ jobs:
           otp-version: 29
           elixir-version: "1.20"
 
+      - run: mix deps.get
+
       # Cache key based on Erlang/Elixir version and the mix.lock hash
       - name: Restore PLT cache
         id: plt_cache
