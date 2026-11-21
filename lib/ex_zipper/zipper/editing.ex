@@ -64,6 +64,10 @@ defmodule ExZipper.Zipper.Editing do
     ExZipper.raise_error(:insert_left_of_root, zipper)
   end
 
+  def insert_left(%Zipper{crumbs: :end} = zipper, _) do
+    ExZipper.raise_error(:insert_left_of_end, zipper)
+  end
+
   def insert_left(%Zipper{} = zipper, node) do
     %{zipper | crumbs: %{zipper.crumbs | left: [node | zipper.crumbs.left]}}
   end
@@ -86,6 +90,10 @@ defmodule ExZipper.Zipper.Editing do
   @spec insert_right(Zipper.t(), any()) :: Zipper.t()
   def insert_right(%Zipper{crumbs: nil} = zipper, _) do
     ExZipper.raise_error(:insert_right_of_root, zipper)
+  end
+
+  def insert_right(%Zipper{crumbs: :end} = zipper, _) do
+    ExZipper.raise_error(:insert_right_of_end, zipper)
   end
 
   def insert_right(%Zipper{} = zipper, node) do
@@ -166,6 +174,7 @@ defmodule ExZipper.Zipper.Editing do
   """
   @spec remove(Zipper.t()) :: Zipper.t()
   def remove(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:remove_root, zipper)
+  def remove(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:remove_end, zipper)
 
   def remove(%Zipper{} = zipper) do
     case Zipper.Navigation.left?(zipper) do
@@ -178,7 +187,14 @@ defmodule ExZipper.Zipper.Editing do
       true ->
         zipper = Zipper.left(zipper)
         [_ | new_right] = zipper.crumbs.right
-        %{zipper | crumbs: %{zipper.crumbs | right: new_right}}
+        %{zipper | crumbs: %{zipper.crumbs | right: new_right}} |> rightmost_descendant()
+    end
+  end
+
+  defp rightmost_descendant(%Zipper{} = zipper) do
+    case ExZipper.Zipper.Navigation.down?(zipper) do
+      false -> zipper
+      true -> zipper |> Zipper.down() |> Zipper.rightmost() |> rightmost_descendant()
     end
   end
 end

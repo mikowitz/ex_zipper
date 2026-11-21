@@ -982,6 +982,45 @@ defmodule ExZipper.Zipper.StructTest do
     end
   end
 
+  describe "remove landing on the previous node in a depth-first walk" do
+    test "lands on the deepest rightmost descendant of a left sibling voice", context do
+      zipper = context.zipper |> Z.find(&(&1 == %Note{note: "c'4"})) |> Z.remove()
+
+      assert Z.node(zipper) == %Note{note: "b4"}
+
+      assert Z.root(zipper).focus == %{
+               context.measure
+               | music: List.delete_at(context.measure.music, -1)
+             }
+    end
+
+    test "lands on the last note of a nested voice", context do
+      zipper = context.zipper |> Z.find(&match?(%Voice{name: "alto"}, &1)) |> Z.remove()
+
+      assert Z.node(zipper) == %Note{note: "a4"}
+      assert zipper |> Z.up() |> Z.node() |> Map.get(:name) == "soprano2"
+    end
+
+    test "lands on an empty voice to the left", context do
+      zipper = context.zipper |> Z.find(&(&1 == %Note{note: "d4"})) |> Z.remove()
+
+      assert Z.node(zipper) == %Voice{name: "empty", music: []}
+    end
+
+    test "rebuilds the parents with make_node when the tree is rebuilt", context do
+      zipper =
+        context.zipper
+        |> Z.find(&(&1 == %Note{note: "b4"}))
+        |> Z.remove()
+
+      assert Z.node(zipper) == %Voice{name: "alto", music: []}
+
+      %Measure{music: music} = Z.root(zipper).focus
+      %Voice{name: "soprano", music: soprano} = Enum.at(music, 3)
+      assert List.last(soprano) == %Voice{name: "alto", music: []}
+    end
+  end
+
   describe "to_list" do
     test "returns a depth-first list of all elements in the zipper", context do
       zipper_list = Z.to_list(context.zipper)

@@ -31,25 +31,31 @@ defmodule ExZipper.Zipper.Navigation do
         ExZipper.raise_error(:down_from_leaf, zipper)
 
       true ->
-        case Zipper.children(zipper) do
-          [] ->
-            ExZipper.raise_error(:down_from_empty_branch, zipper)
+        case Zipper.end?(zipper) do
+          true ->
+            ExZipper.raise_error(:down_from_end, zipper)
 
-          [new_focus | new_right] ->
-            %Zipper{
-              focus: new_focus,
-              crumbs: %{
-                left: [],
-                right: new_right,
-                pnodes: zipper.crumbs,
-                ppath:
-                  case zipper.crumbs do
-                    nil -> [zipper.focus]
-                    crumbs -> [zipper.focus | crumbs.ppath]
-                  end
-              },
-              functions: zipper.functions
-            }
+          false ->
+            case Zipper.children(zipper) do
+              [] ->
+                ExZipper.raise_error(:down_from_empty_branch, zipper)
+
+              [new_focus | new_right] ->
+                %Zipper{
+                  focus: new_focus,
+                  crumbs: %{
+                    left: [],
+                    right: new_right,
+                    pnodes: zipper.crumbs,
+                    ppath:
+                      case zipper.crumbs do
+                        nil -> [zipper.focus]
+                        crumbs -> [zipper.focus | crumbs.ppath]
+                      end
+                  },
+                  functions: zipper.functions
+                }
+            end
         end
     end
   end
@@ -75,6 +81,7 @@ defmodule ExZipper.Zipper.Navigation do
   """
   @spec up(Zipper.t()) :: Zipper.t()
   def up(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:up_from_root, zipper)
+  def up(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:up_from_end, zipper)
 
   def up(%Zipper{} = zipper) do
     new_children =
@@ -112,6 +119,7 @@ defmodule ExZipper.Zipper.Navigation do
   """
   @spec right(Zipper.t()) :: Zipper.t()
   def right(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:right_from_root, zipper)
+  def right(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:right_from_end, zipper)
 
   def right(%Zipper{crumbs: %{right: []}} = zipper) do
     ExZipper.raise_error(:right_from_rightmost, zipper)
@@ -149,6 +157,7 @@ defmodule ExZipper.Zipper.Navigation do
   """
   @spec left(Zipper.t()) :: Zipper.t()
   def left(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:left_from_root, zipper)
+  def left(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:left_from_end, zipper)
 
   def left(%Zipper{crumbs: %{left: []}} = zipper),
     do: ExZipper.raise_error(:left_from_leftmost, zipper)
@@ -185,6 +194,9 @@ defmodule ExZipper.Zipper.Navigation do
   def rightmost(%Zipper{crumbs: nil} = zipper),
     do: ExZipper.raise_error(:rightmost_from_root, zipper)
 
+  def rightmost(%Zipper{crumbs: :end} = zipper),
+    do: ExZipper.raise_error(:rightmost_from_end, zipper)
+
   def rightmost(%Zipper{crumbs: %{right: []}} = zipper), do: zipper
 
   def rightmost(%Zipper{} = zipper) do
@@ -216,6 +228,9 @@ defmodule ExZipper.Zipper.Navigation do
   def leftmost(%Zipper{crumbs: nil} = zipper),
     do: ExZipper.raise_error(:leftmost_from_root, zipper)
 
+  def leftmost(%Zipper{crumbs: :end} = zipper),
+    do: ExZipper.raise_error(:leftmost_from_end, zipper)
+
   def leftmost(%Zipper{crumbs: %{left: []}} = zipper), do: zipper
 
   def leftmost(%Zipper{} = zipper) do
@@ -226,7 +241,9 @@ defmodule ExZipper.Zipper.Navigation do
 
   @doc """
   Moves to the next focus in a depth-first walk through the zipper. If it
-  reaches the end, subsequent calls to `next` return the same focus
+  reaches the end, subsequent calls to `next` return the same focus, and
+  other navigation functions raise an `ExZipper.Error`. Call
+  `ExZipper.Zipper.root/1` to start navigating again.
 
   ## Examples
 

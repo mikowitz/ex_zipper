@@ -583,6 +583,182 @@ defmodule ExZipper.Zipper.ListTest do
     end
   end
 
+  describe "remove landing on the previous node in a depth-first walk" do
+    test "lands on the left sibling when it is a leaf", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == [3, 4, [5, 6], [7]])) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 2
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, 8]
+    end
+
+    test "lands on the left sibling when it is an empty branch", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 2)) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == []
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], [3, 4, [5, 6], [7]], 8]
+    end
+
+    test "lands on the deepest rightmost descendant of the left sibling", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 8)) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 7
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [3, 4, [5, 6], [7]]]
+    end
+
+    test "lands on the rightmost child of a left sibling branch below the root", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == [7])) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 6
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [3, 4, [5, 6]], 8]
+    end
+
+    test "lands on a leaf several levels down inside the left sibling" do
+      zipper =
+        [[1, [2, [3, [4]]]], 5]
+        |> Zipper.list_zipper()
+        |> Zipper.find(&(&1 == 5))
+        |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 4
+      assert zipper |> Zipper.root() |> Zipper.node() == [[1, [2, [3, [4]]]]]
+    end
+
+    test "lands on an empty branch that is the rightmost descendant of the left sibling" do
+      zipper =
+        [[1, []], 2]
+        |> Zipper.list_zipper()
+        |> Zipper.find(&(&1 == 2))
+        |> Zipper.remove()
+
+      assert Zipper.node(zipper) == []
+      assert Zipper.lefts(zipper) == [1]
+      assert zipper |> Zipper.root() |> Zipper.node() == [[1, []]]
+    end
+
+    test "lands on a leaf that follows a branch inside the left sibling" do
+      zipper =
+        [[[1, 2], 3], 4]
+        |> Zipper.list_zipper()
+        |> Zipper.find(&(&1 == 4))
+        |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 3
+      assert Zipper.lefts(zipper) == [[1, 2]]
+    end
+
+    test "lands on the parent, without the removed node, when removing the leftmost child",
+         context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 3)) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == [4, [5, 6], [7]]
+      assert Zipper.lefts(zipper) == [1, [], 2]
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [4, [5, 6], [7]], 8]
+    end
+
+    test "leaves an empty branch when removing an only child", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 7)) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == []
+      assert Zipper.lefts(zipper) == [3, 4, [5, 6]]
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [3, 4, [5, 6], []], 8]
+    end
+
+    test "leaves an empty root when removing the root's only child" do
+      zipper = [1] |> Zipper.list_zipper() |> Zipper.down() |> Zipper.remove()
+
+      assert Zipper.node(zipper) == []
+      assert Zipper.path(zipper) == []
+    end
+
+    test "returns a zipper that can keep walking past where the node was", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == [7])) |> Zipper.remove()
+
+      assert zipper |> Zipper.next() |> Zipper.node() == 8
+    end
+
+    test "returns a zipper at the end of the tree when the last node is removed", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 8)) |> Zipper.remove()
+
+      assert Zipper.rights(zipper) == []
+      assert zipper |> Zipper.next() |> Zipper.end?()
+    end
+
+    test "returns a zipper that can navigate back up to the edited parents", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == 8)) |> Zipper.remove()
+
+      assert zipper |> Zipper.up() |> Zipper.node() == [7]
+      assert zipper |> Zipper.up() |> Zipper.up() |> Zipper.node() == [3, 4, [5, 6], [7]]
+
+      assert zipper |> Zipper.up() |> Zipper.up() |> Zipper.up() |> Zipper.node() ==
+               [1, [], 2, [3, 4, [5, 6], [7]]]
+    end
+
+    test "can be called repeatedly, removing the previous node each time", context do
+      zipper =
+        context.zipper
+        |> Zipper.find(&(&1 == 8))
+        |> Zipper.remove()
+        |> Zipper.remove()
+
+      assert Zipper.node(zipper) == []
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [3, 4, [5, 6], []]]
+    end
+
+    test "removes a whole subtree and lands before it", context do
+      zipper = context.zipper |> Zipper.find(&(&1 == [5, 6])) |> Zipper.remove()
+
+      assert Zipper.node(zipper) == 4
+      assert zipper |> Zipper.root() |> Zipper.node() == [1, [], 2, [3, 4, [7]], 8]
+    end
+
+    for tree <- [
+          [1, [], 2, [3, 4, [5, 6], [7]], 8],
+          [[1, []], 2],
+          [[1, [2, [3, [4]]]], 5],
+          [[[1, 2], 3], 4],
+          [[], [[]], [[], []]]
+        ] do
+      test "agrees with prev and deletes only the removed node, at every location of #{inspect(tree, charlists: :as_lists)}" do
+        tree = unquote(Macro.escape(tree))
+
+        tree
+        |> Zipper.list_zipper()
+        |> Stream.iterate(&Zipper.next/1)
+        |> Stream.take_while(&(not Zipper.end?(&1)))
+        |> Stream.drop(1)
+        |> Enum.each(fn location ->
+          removed = Zipper.remove(location)
+          prev = Zipper.prev(location)
+          index_path = index_path(location)
+          label = "removing at #{inspect(index_path)}"
+
+          if Zipper.lefts(location) != [] do
+            assert Zipper.node(removed) == Zipper.node(prev), label
+          end
+
+          assert length(Zipper.path(removed)) == length(Zipper.path(prev)), label
+
+          if Zipper.path(prev) != [] do
+            assert Zipper.lefts(removed) == Zipper.lefts(prev), label
+          end
+
+          assert removed |> Zipper.root() |> Zipper.node() == delete_at_path(tree, index_path),
+                 label
+        end)
+      end
+    end
+  end
+
+  defp index_path(%Zipper{crumbs: nil}), do: []
+
+  defp index_path(zipper),
+    do: index_path(Zipper.up(zipper)) ++ [length(Zipper.lefts(zipper))]
+
+  defp delete_at_path(list, [index]), do: List.delete_at(list, index)
+
+  defp delete_at_path(list, [index | rest]),
+    do: List.update_at(list, index, &delete_at_path(&1, rest))
+
   describe "to_list" do
     test "returns a depth-first list of all elements in the zipper", context do
       assert Zipper.to_list(context.zipper) == [

@@ -43,7 +43,7 @@ defmodule ExZipper.Zipper.Traversal do
       nil
 
   """
-  @spec find(Zipper.t(), (any() -> as_boolean(any()))) :: Zipper.t()
+  @spec find(Zipper.t(), (any() -> as_boolean(any()))) :: Zipper.t() | nil
   def find(zipper, fun) do
     recur_find(zipper, fun)
   end

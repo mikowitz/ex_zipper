@@ -17,7 +17,19 @@ defmodule ExZipper.Error do
     insert_right_of_root: "Cannot insert to the right of the root",
     insert_child_of_leaf: "Cannot insert a child into a leaf",
     append_child_of_leaf: "Cannot append a child to a leaf",
-    remove_root: "Cannot remove root"
+    remove_root: "Cannot remove root",
+    down_from_end: "Cannot move down from the end",
+    up_from_end: "Cannot move up from the end",
+    right_from_end: "Cannot move right from the end",
+    left_from_end: "Cannot move left from the end",
+    lefts_of_end: "Cannot query lefts of the end",
+    rights_of_end: "Cannot query rights of the end",
+    insert_left_of_end: "Cannot insert to the left of the end",
+    insert_right_of_end: "Cannot insert to the right of the end",
+    path_of_end: "Cannot query the path to the end",
+    rightmost_from_end: "Cannot call rightmost from the end",
+    leftmost_from_end: "Cannot call leftmost from the end",
+    remove_end: "Cannot remove the end"
   ]
 
   @moduledoc """
@@ -40,7 +52,7 @@ defmodule ExZipper.Error do
 
   ## Reasons
 
-  #{Enum.map_join(@messages, "\n", fn {reason, message} -> "  * `#{inspect(reason)}` - #{message}" end)}
+  #{Enum.map_join(Enum.sort(@messages), "\n", fn {reason, message} -> "  * `#{inspect(reason)}` - #{message}" end)}
 
   ## Handling errors
 

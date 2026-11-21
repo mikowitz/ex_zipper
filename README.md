@@ -7,7 +7,7 @@ An Elixir implementation of [Huet's Zipper][huet], with gratitude to Rich Hickey
 
 ```elixir
 @deps [
-  ex_zipper: "~> 0.1.3"
+  ex_zipper: "~> 1.0.0"
 ]
 ```
 
@@ -65,7 +65,37 @@ moving as deep down one branch of the tree before moving laterally.
 * `Zipper.next` moves to the next node, preferring to move to a child over a sibling
 * `Zipper.prev` moves back up through a depth-first ordering of the tree
 * `Zipper.end?` returns `true` if the zipper has reached the end of a depth-first
-  walk. At this point, the walk has been exhausted, and cannot be reversed.
+  walk. At this point, the walk has been exhausted: it cannot be reversed with
+  `Zipper.prev`, and other navigation functions raise an `ExZipper.Error`.
+  Call `Zipper.root` to start navigating again.
+
+### Searching and transforming zippers
+
+The following functions walk the zipper depth-first, like `Zipper.next`. Each
+walk starts at the current focus, not at the root, and visits the current
+focus, its descendants, and every node after it in the walk.
+
+* `Zipper.find/2` returns a zipper focused on the first node for which the
+  given function returns a truthy value, or `nil` if nothing matches. The
+  current focus is checked first, so call `Zipper.next` before searching again
+  to find the following match
+* `Zipper.find_all/2` returns a list of zippers, one focused on each matching
+  node, in walk order. Each is a separate snapshot, so editing one does not
+  change the others
+* `Zipper.map/2` replaces every node in the walk with the result of calling
+  the given function on it, and returns a zipper focused on the root. The
+  function is called on branches as well as leaves, and a branch is updated
+  before its children are visited
+
+```elixir
+iex> zipper = Zipper.list_zipper([1, [], [2, 3, [4, 5]]])
+iex> zipper |> Zipper.find(&(is_integer(&1) and &1 > 2)) |> Zipper.node
+3
+iex> zipper |> Zipper.find_all(&is_integer/1) |> Enum.map(&Zipper.node/1)
+[1, 2, 3, 4, 5]
+iex> zipper |> Zipper.map(fn n when is_integer(n) -> -n; list -> list end) |> Zipper.node()
+[-1, [], [-2, -3, [-4, -5]]]
+```
 
 ### Editing zippers
 
@@ -111,5 +141,3 @@ This library is released under the [UNLICENSE](UNLICENSE).
 
 [huet]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
 [clojure]: clojure.github.io/clojure/clojure.zip-api.html
-
-

@@ -102,6 +102,10 @@ defmodule ExZipper.Zipper do
   @doc """
   Returns to the root of the zipper. Remains in place if already on the root.
 
+  This is also the only way to leave the end of a depth-first walk (see
+  `end?/1`). Once a walk is exhausted, other navigation functions raise an
+  `ExZipper.Error` until `root/1` is called.
+
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
@@ -109,6 +113,11 @@ defmodule ExZipper.Zipper do
       [1,[],[2,3,[4,5]]]
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.down |> Zipper.root |> Zipper.node
       [1,[],[2,3,[4,5]]]
+      iex> walked = Enum.reduce(1..9, zipper, fn _, z -> Zipper.next(z) end)
+      iex> Zipper.end?(walked)
+      true
+      iex> walked |> Zipper.root |> Zipper.down |> Zipper.node
+      1
 
   """
   @spec root(Zipper.t()) :: Zipper.t()
@@ -135,6 +144,7 @@ defmodule ExZipper.Zipper do
   """
   @spec lefts(Zipper.t()) :: [any()]
   def lefts(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:lefts_of_root, zipper)
+  def lefts(%__MODULE__{crumbs: :end} = zipper), do: ExZipper.raise_error(:lefts_of_end, zipper)
   def lefts(%__MODULE__{crumbs: %{left: left}}), do: Enum.reverse(left)
 
   @doc """
@@ -156,6 +166,7 @@ defmodule ExZipper.Zipper do
   """
   @spec rights(Zipper.t()) :: [any()]
   def rights(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:rights_of_root, zipper)
+  def rights(%__MODULE__{crumbs: :end} = zipper), do: ExZipper.raise_error(:rights_of_end, zipper)
   def rights(%__MODULE__{crumbs: %{right: right}}), do: right
 
   @doc """
@@ -176,6 +187,7 @@ defmodule ExZipper.Zipper do
   """
   @spec path(Zipper.t()) :: [any()]
   def path(%__MODULE__{crumbs: nil}), do: []
+  def path(%__MODULE__{crumbs: :end} = zipper), do: ExZipper.raise_error(:path_of_end, zipper)
   def path(%__MODULE__{crumbs: %{ppath: paths}}), do: Enum.reverse(paths)
 
   @doc """
@@ -243,6 +255,11 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Returns true if a depth-first walkthrough of the zipper has been exhausted.
+
+  A zipper at the end of a walk is focused on the root, but it cannot be
+  navigated or have siblings inserted or removed: those functions raise an
+  `ExZipper.Error`, and `next/1` stays at the end. Call `root/1` to start
+  navigating again.
 
   ## Examples
 
