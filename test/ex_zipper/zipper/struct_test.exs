@@ -775,9 +775,7 @@ defmodule ExZipper.Zipper.StructTest do
       zipper = Z.next(zipper)
       assert zipper.focus == context.measure
       assert Z.end?(zipper)
-      zipper = Z.next(zipper)
-      assert zipper.focus == context.measure
-      assert Z.end?(zipper)
+      assert_zipper_error(:next_of_end, fn -> Z.next(zipper) end)
     end
   end
 

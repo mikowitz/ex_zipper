@@ -294,25 +294,449 @@ defmodule ExZipper.Zipper do
   @spec to_list(Zipper.t()) :: [any()]
   def to_list(%__MODULE__{} = zipper), do: _to_list(zipper, [])
 
+  @doc """
+  Moves to the leftmost child of the current focus. Raises an `ExZipper.Error`
+  if the current focus is a leaf or an empty branch.
+
+  ## Example
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.node
+      1
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.down
+      ** (ExZipper.Error) Cannot move down into a leaf
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.down
+      ** (ExZipper.Error) Cannot move down onto an empty branch
+
+  """
+  @spec down(Zipper.t()) :: Zipper.t()
   defdelegate down(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves up to the parent of the current focus. Raises an `ExZipper.Error` if
+  already at the root of the zipper.
+
+  ## Example
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.up |> Zipper.node
+      [1,[],[2,3,[4,5]]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.up(zipper)
+      ** (ExZipper.Error) Cannot move up from the root
+
+  """
+  @spec up(Zipper.t()) :: Zipper.t()
   defdelegate up(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the next sibling to the right of the current focus. Raises an
+  `ExZipper.Error` if at the root or already at the rightmost sibling at its
+  depth in the tree.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.node
+      []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.right
+      ** (ExZipper.Error) Cannot move right from the rightmost member
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.right(zipper)
+      ** (ExZipper.Error) Cannot move right from the root
+
+  """
+  @spec right(Zipper.t()) :: Zipper.t()
   defdelegate right(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the next sibling to the left of the current focus. Raises an
+  `ExZipper.Error` if at the root or already at the leftmost sibling at its
+  depth in the tree.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.left
+      ** (ExZipper.Error) Cannot move left from the leftmost member
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.left |> Zipper.node
+      []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.left(zipper)
+      ** (ExZipper.Error) Cannot move left from the root
+
+  """
+  @spec left(Zipper.t()) :: Zipper.t()
   defdelegate left(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the rightmost sibling at the same depth as the current focus. Remains
+  in place if already focused on the rightmost sibling. Raises an
+  `ExZipper.Error` if called on the root.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.rightmost|> Zipper.node
+      [2,3,[4,5]]
+      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.rightmost |> Zipper.node
+      [2,3,[4,5]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.rightmost(zipper)
+      ** (ExZipper.Error) Cannot call rightmost from the root
+
+  """
+  @spec rightmost(Zipper.t()) :: Zipper.t()
   defdelegate rightmost(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the leftmost sibling at the same depth as the current focus. Remains
+  in place if already focused on the leftmost sibling. Raises an
+  `ExZipper.Error` if called on the root.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.leftmost |> Zipper.node
+      1
+      iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.leftmost |> Zipper.node
+      1
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.leftmost(zipper)
+      ** (ExZipper.Error) Cannot call leftmost from the root
+
+  """
+  @spec leftmost(Zipper.t()) :: Zipper.t()
   defdelegate leftmost(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the next focus in a depth-first walk through the zipper. If it
+  reaches the end, subsequent calls to `next` return the same focus, and
+  other navigation functions raise an `ExZipper.Error`. Call
+  `root/1` to start navigating again.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.next |> Zipper.node
+      1
+      iex> zipper |> Zipper.next |> Zipper.next |> Zipper.node
+      []
+      iex> zipper |> Zipper.next |> Zipper.next
+      ...> |> Zipper.next |> Zipper.next |> Zipper.node
+      2
+      iex> zipper = zipper |> Zipper.down |> Zipper.rightmost
+      ...> |> Zipper.down |> Zipper.rightmost
+      ...> |> Zipper.down |> Zipper.rightmost
+      iex> zipper |> Zipper.next |> Zipper.node
+      [1,[],[2,3,[4,5]]]
+      iex> zipper |> Zipper.next |> Zipper.next
+      ** (ExZipper.Error) Cannot call next from the end
+
+  """
+  @spec next(Zipper.t()) :: Zipper.t()
   defdelegate next(zipper), to: ExZipper.Zipper.Navigation
+
+  @doc """
+  Moves to the previous focus in a depth-first walk through the zipper. Raises
+  an `ExZipper.Error` if called on the end of the walk. Returns the root if called on
+  the root.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.prev |> Zipper.node
+      [1,[],[2,3,[4,5]]]
+      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.prev |> Zipper.node
+      []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.down |> Zipper.rightmost
+      ...> |> Zipper.down |> Zipper.rightmost |> Zipper.next |> Zipper.prev
+      ** (ExZipper.Error) Cannot call previous from the end
+
+  """
+  @spec prev(Zipper.t()) :: Zipper.t()
   defdelegate prev(zipper), to: ExZipper.Zipper.Navigation
 
+  @doc """
+  Inserts a new node as a new sibling to the immediate right of the current focus.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.insert_right(0) |> Zipper.root |> Zipper.node
+      [1,0,[],[2,3,[4,5]]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.insert_right(zipper, 0)
+      ** (ExZipper.Error) Cannot insert to the right of the root
+
+  """
+  @spec insert_right(Zipper.t(), any()) :: Zipper.t()
   defdelegate insert_right(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Inserts a new node as a new sibling to the immediate left of the current focus.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.insert_left(0) |> Zipper.root |> Zipper.node
+      [0,1,[],[2,3,[4,5]]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.insert_left(zipper, 0)
+      ** (ExZipper.Error) Cannot insert to the left of the root
+
+  """
+  @spec insert_left(Zipper.t(), any()) :: Zipper.t()
   defdelegate insert_left(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Inserts a child as the leftmost child of the current focus. Raises an
+  `ExZipper.Error` if called on a leaf.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.insert_child(6) |> Zipper.node
+      [6,1,[],[2,3,[4,5]]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.insert_child(6)
+      ** (ExZipper.Error) Cannot insert a child into a leaf
+
+  """
+  @spec insert_child(Zipper.t(), any()) :: Zipper.t()
   defdelegate insert_child(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Appends a child as the rightmost child of the current focus. Raises an
+  `ExZipper.Error` if called on a leaf.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.append_child(6) |> Zipper.node
+      [1,[],[2,3,[4,5]],6]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.append_child(6)
+      ** (ExZipper.Error) Cannot append a child to a leaf
+
+  """
+  @spec append_child(Zipper.t(), any()) :: Zipper.t()
   defdelegate append_child(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Replaces the current focus with the node passed as the second argument.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper = Zipper.down(zipper)
+      iex> Zipper.node(zipper)
+      1
+      iex> zipper = Zipper.replace(zipper, 10)
+      iex> Zipper.node(zipper)
+      10
+
+  """
+  @spec replace(Zipper.t(), any()) :: Zipper.t()
   defdelegate replace(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Replaces the current focus with the result of applying the given function
+  to the current focus
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper = Zipper.down(zipper)
+      iex> Zipper.node(zipper)
+      1
+      iex> zipper = Zipper.edit(zipper, &(&1 * 10))
+      iex> Zipper.node(zipper)
+      10
+
+  """
+  @spec edit(Zipper.t(), (any() -> any())) :: Zipper.t()
   defdelegate edit(zipper, node), to: ExZipper.Zipper.Editing
+
+  @doc """
+  Removes the current focus from the zipper, moving focus to the node previous
+  to the current focus in a depth-first walk. Raises an `ExZipper.Error` if
+  called on the root or at the end of a walk.
+
+  If the removed node has a left sibling, focus moves to the deepest rightmost
+  descendant of that sibling, or to the sibling itself if it is a leaf or an
+  empty branch. Otherwise focus moves to the parent, which no longer contains
+  the removed node.
+
+  ## Examples
+
+  Removing the leftmost child moves focus to the parent, without that child:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.remove |> Zipper.node
+      [[],[2,3,[4,5]]]
+
+  Removing a node whose left sibling is a branch moves focus to the last node
+  inside that branch:
+
+      iex> zipper = Zipper.list_zipper([1,[2,[3,4]],5])
+      iex> zipper = zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove
+      iex> Zipper.node(zipper)
+      4
+      iex> zipper |> Zipper.root |> Zipper.node
+      [1,[2,[3,4]]]
+
+  Removing a node whose left sibling is a leaf or an empty branch moves focus
+  to that sibling:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove |> Zipper.node
+      []
+
+  Removing the root raises:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.remove(zipper)
+      ** (ExZipper.Error) Cannot remove root
+
+  """
+  @spec remove(Zipper.t()) :: Zipper.t()
   defdelegate remove(zipper), to: ExZipper.Zipper.Editing
 
+  @doc """
+  Walks the zipper depth-first from the current focus. Returns a zipper
+  focused on the first node for which `fun` returns a truthy value. Returns
+  `nil` if no node matches before the walk ends.
+
+  The current focus is checked first, so to find the next match after the
+  one you have, call `next/1` first.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.find(&(is_integer(&1) and &1 > 2)) |> Zipper.node
+      3
+      iex> zipper |> Zipper.find(&(&1 == [4,5])) |> Zipper.path
+      [[1,[],[2,3,[4,5]]],[2,3,[4,5]]]
+      iex> Zipper.find(zipper, &(&1 == 6))
+      nil
+
+  The search starts at the current focus, so it finds the focus itself if it
+  matches. Nodes that come before the focus in the walk are not checked:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper = Zipper.find(zipper, &is_integer/1)
+      iex> Zipper.node(zipper)
+      1
+      iex> zipper |> Zipper.find(&is_integer/1) |> Zipper.node
+      1
+      iex> zipper |> Zipper.next |> Zipper.find(&is_integer/1) |> Zipper.node
+      2
+      iex> zipper |> Zipper.next |> Zipper.find(&(&1 == 1))
+      nil
+
+  """
+  @spec find(Zipper.t(), (any() -> as_boolean(any()))) :: Zipper.t() | nil
   defdelegate find(zipper, fun), to: ExZipper.Zipper.Traversal
+
+  @doc """
+  Walks the zipper depth-first from the current focus. Returns a list of
+  zippers, one focused on each node for which `fun` returns a truthy value,
+  in walk order. Returns an empty list if nothing matches.
+
+  Each zipper in the list is a separate snapshot of the tree. Editing one
+  does not change the others.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.find_all(&is_integer/1) |> Enum.map(&Zipper.node/1)
+      [1,2,3,4,5]
+      iex> zipper |> Zipper.find_all(&is_list/1) |> Enum.map(&Zipper.node/1)
+      [[1,[],[2,3,[4,5]]],[],[2,3,[4,5]],[4,5]]
+      iex> Zipper.find_all(zipper, &(&1 == 6))
+      []
+
+  The walk starts at the current focus:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper
+      ...> |> Zipper.find(&(&1 == 3))
+      ...> |> Zipper.find_all(&is_integer/1)
+      ...> |> Enum.map(&Zipper.node/1)
+      [3,4,5]
+
+  """
+  @spec find_all(Zipper.t(), (any() -> as_boolean(any()))) :: [Zipper.t()]
   defdelegate find_all(zipper, fun), to: ExZipper.Zipper.Traversal
+
+  @doc """
+  Replaces every node visited by a depth-first walk with the result of
+  calling `fun` on it, and returns a zipper focused on the (updated) root.
+
+  `fun` is called on branches as well as leaves, so it must handle every kind
+  of node in the tree. A branch is updated before its children are visited,
+  so the walk goes into the children of the branch `fun` returns, not the
+  original one.
+
+  ## Examples
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper
+      ...> |> Zipper.map(fn
+      ...>   n when is_integer(n) -> n * 10
+      ...>   list -> list
+      ...> end)
+      ...> |> Zipper.node
+      [10,[],[20,30,[40,50]]]
+
+  Because branches are updated first, `fun` can change which children get
+  visited:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper
+      ...> |> Zipper.map(fn
+      ...>   n when is_integer(n) -> n * 10
+      ...>   list -> Enum.reverse(list)
+      ...> end)
+      ...> |> Zipper.node
+      [[[50,40],30,20],[],10]
+
+  The walk starts at the current focus, so nodes before it are left alone:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper
+      ...> |> Zipper.find(&(&1 == 3))
+      ...> |> Zipper.map(fn
+      ...>   n when is_integer(n) -> n * 10
+      ...>   list -> list
+      ...> end)
+      ...> |> Zipper.node
+      [1,[],[2,30,[40,50]]]
+
+  """
+  @spec map(Zipper.t(), (any() -> any())) :: Zipper.t()
   defdelegate map(zipper, fun), to: ExZipper.Zipper.Traversal
 
   ## Private

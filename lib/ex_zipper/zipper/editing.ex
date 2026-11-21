@@ -1,64 +1,22 @@
 defmodule ExZipper.Zipper.Editing do
-  @moduledoc """
-  Utility module for functions that concern editing zippers
-  """
+  @moduledoc false
 
   alias ExZipper.Zipper
 
-  @doc """
-  Replaces the current focus with the node passed as the second argument.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper = Zipper.down(zipper)
-      iex> Zipper.node(zipper)
-      1
-      iex> zipper = Zipper.replace(zipper, 10)
-      iex> Zipper.node(zipper)
-      10
-
-  """
   @spec replace(Zipper.t(), any()) :: Zipper.t()
+  def replace(%Zipper{crumbs: :end} = zipper, _), do: ExZipper.raise_error(:replace_end, zipper)
+
   def replace(%Zipper{} = zipper, new_focus) do
     %{zipper | focus: new_focus}
   end
 
-  @doc """
-  Replaces the current focus with the result of applying the given function
-  to the current focus
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper = Zipper.down(zipper)
-      iex> Zipper.node(zipper)
-      1
-      iex> zipper = Zipper.edit(zipper, &(&1 * 10))
-      iex> Zipper.node(zipper)
-      10
-
-  """
   @spec edit(Zipper.t(), (any() -> any())) :: Zipper.t()
+  def edit(%Zipper{crumbs: :end} = zipper, _), do: ExZipper.raise_error(:edit_end, zipper)
+
   def edit(%Zipper{} = zipper, func) do
     replace(zipper, func.(zipper.focus))
   end
 
-  @doc """
-  Inserts a new node as a new sibling to the immediate left of the current focus.
-  Does not change focus. Raises an `ExZipper.Error` if called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.insert_left(0) |> Zipper.root |> Zipper.node
-      [0,1,[],[2,3,[4,5]]]
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_left(zipper, 0)
-      ** (ExZipper.Error) Cannot insert to the left of the root
-
-  """
   @spec insert_left(Zipper.t(), any()) :: Zipper.t()
   def insert_left(%Zipper{crumbs: nil} = zipper, _) do
     ExZipper.raise_error(:insert_left_of_root, zipper)
@@ -72,21 +30,6 @@ defmodule ExZipper.Zipper.Editing do
     %{zipper | crumbs: %{zipper.crumbs | left: [node | zipper.crumbs.left]}}
   end
 
-  @doc """
-  Inserts a new node as a new sibling to the immediate right of the current focus.
-  Does not change focus. Raises an `ExZipper.Error` if called on the root.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.insert_right(0) |> Zipper.root |> Zipper.node
-      [1,0,[],[2,3,[4,5]]]
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_right(zipper, 0)
-      ** (ExZipper.Error) Cannot insert to the right of the root
-
-  """
   @spec insert_right(Zipper.t(), any()) :: Zipper.t()
   def insert_right(%Zipper{crumbs: nil} = zipper, _) do
     ExZipper.raise_error(:insert_right_of_root, zipper)
@@ -100,22 +43,10 @@ defmodule ExZipper.Zipper.Editing do
     %{zipper | crumbs: %{zipper.crumbs | right: [node | zipper.crumbs.right]}}
   end
 
-  @doc """
-  Inserts a child as the leftmost child of the current focus. Raises an
-  `ExZipper.Error` if called on a leaf.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.insert_child(6) |> Zipper.node
-      [6,1,[],[2,3,[4,5]]]
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.insert_child(6)
-      ** (ExZipper.Error) Cannot insert a child into a leaf
-
-  """
   @spec insert_child(Zipper.t(), any()) :: Zipper.t()
+  def insert_child(%Zipper{crumbs: :end} = zipper, _),
+    do: ExZipper.raise_error(:insert_child_of_end, zipper)
+
   def insert_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
@@ -129,22 +60,10 @@ defmodule ExZipper.Zipper.Editing do
     end
   end
 
-  @doc """
-  Appends a child as the rightmost child of the current focus. Raises an
-  `ExZipper.Error` if called on a leaf.
-
-  ## Examples
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.append_child(6) |> Zipper.node
-      [1,[],[2,3,[4,5]],6]
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.append_child(6)
-      ** (ExZipper.Error) Cannot append a child to a leaf
-
-  """
   @spec append_child(Zipper.t(), any()) :: Zipper.t()
+  def append_child(%Zipper{crumbs: :end} = zipper, _),
+    do: ExZipper.raise_error(:append_child_of_end, zipper)
+
   def append_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
@@ -157,48 +76,6 @@ defmodule ExZipper.Zipper.Editing do
     end
   end
 
-  @doc """
-  Removes the current focus from the zipper, moving focus to the node previous
-  to the current focus in a depth-first walk. Raises an `ExZipper.Error` if
-  called on the root or at the end of a walk.
-
-  If the removed node has a left sibling, focus moves to the deepest rightmost
-  descendant of that sibling, or to the sibling itself if it is a leaf or an
-  empty branch. Otherwise focus moves to the parent, which no longer contains
-  the removed node.
-
-  ## Examples
-
-  Removing the leftmost child moves focus to the parent, without that child:
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.remove |> Zipper.node
-      [[],[2,3,[4,5]]]
-
-  Removing a node whose left sibling is a branch moves focus to the last node
-  inside that branch:
-
-      iex> zipper = Zipper.list_zipper([1,[2,[3,4]],5])
-      iex> zipper = zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove
-      iex> Zipper.node(zipper)
-      4
-      iex> zipper |> Zipper.root |> Zipper.node
-      [1,[2,[3,4]]]
-
-  Removing a node whose left sibling is a leaf or an empty branch moves focus
-  to that sibling:
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove |> Zipper.node
-      []
-
-  Removing the root raises:
-
-      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.remove(zipper)
-      ** (ExZipper.Error) Cannot remove root
-
-  """
   @spec remove(Zipper.t()) :: Zipper.t()
   def remove(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:remove_root, zipper)
   def remove(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:remove_end, zipper)

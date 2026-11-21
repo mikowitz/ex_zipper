@@ -1,7 +1,7 @@
 defmodule ExZipper.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "1.0.0"
   @source_url "https://github.com/mikowitz/ex_zipper"
 
   def project do
@@ -49,14 +49,14 @@ defmodule ExZipper.MixProject do
     [
       main: "readme",
       source_ref: "v#{@version}",
-      extras: ["README.md"]
+      extras: ["README.md", "CHANGELOG.md"]
     ]
   end
 
   defp package do
     [
       licenses: ["Unlicense"],
-      files: ~w(lib mix.exs README* UNLICENSE),
+      files: ~w(lib mix.exs README* CHANGELOG* UNLICENSE),
       links: %{
         "GitHub" => @source_url
       }

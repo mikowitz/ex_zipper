@@ -33,7 +33,12 @@ defmodule ExZipper.ErrorTest do
     :path_of_end,
     :insert_left_of_end,
     :insert_right_of_end,
-    :remove_end
+    :remove_end,
+    :next_of_end,
+    :insert_child_of_end,
+    :append_child_of_end,
+    :replace_end,
+    :edit_end
   ]
 
   setup do
@@ -185,16 +190,39 @@ defmodule ExZipper.ErrorTest do
     end
 
     test "raises in a pipeline that tries to continue after the walk", context do
-      assert_zipper_error(:down_from_end, fn ->
+      assert_zipper_error(:next_of_end, fn ->
         context.walked |> Zipper.next() |> Zipper.down() |> Zipper.right()
       end)
     end
 
-    test "stays at the end when next is called again", context do
-      zipper = Zipper.next(context.walked)
+    test "raises an ExZipper.Error when next is called again", context do
+      assert_zipper_error(:next_of_end, fn -> Zipper.next(context.walked) end)
+    end
 
-      assert Zipper.end?(zipper)
-      assert zipper == context.walked
+    test "raises an ExZipper.Error when editing the focus or its children", context do
+      assert_zipper_error(:insert_child_of_end, fn -> Zipper.insert_child(context.walked, 0) end)
+      assert_zipper_error(:append_child_of_end, fn -> Zipper.append_child(context.walked, 0) end)
+      assert_zipper_error(:replace_end, fn -> Zipper.replace(context.walked, [0]) end)
+      assert_zipper_error(:edit_end, fn -> Zipper.edit(context.walked, & &1) end)
+    end
+
+    test "can be edited again after an explicit call to root", context do
+      zipper =
+        context.walked
+        |> Zipper.root()
+        |> Zipper.append_child(6)
+        |> Zipper.insert_child(0)
+
+      assert Zipper.node(zipper) == [0, 1, [], [2, 3, [4, 5]], 6]
+      assert zipper |> Zipper.replace([]) |> Zipper.node() == []
+
+      assert zipper |> Zipper.edit(&Enum.reverse/1) |> Zipper.node() == [
+               6,
+               [2, 3, [4, 5]],
+               [],
+               1,
+               0
+             ]
     end
 
     test "can be navigated again after an explicit call to root", context do

@@ -443,9 +443,7 @@ defmodule ExZipper.Zipper.ListTest do
       zipper = Zipper.next(zipper)
       assert zipper.focus == context.list
       assert Zipper.end?(zipper)
-      zipper = Zipper.next(zipper)
-      assert zipper.focus == context.list
-      assert Zipper.end?(zipper)
+      assert_zipper_error(:next_of_end, fn -> Zipper.next(zipper) end)
     end
   end
 

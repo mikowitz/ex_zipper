@@ -7,18 +7,18 @@ An Elixir implementation of [Huet's Zipper][huet], with gratitude to Rich Hickey
 
 ```elixir
 @deps [
-  ex_zipper: "~> 1.0.0"
+  ex_zipper: "~> 1.0"
 ]
 ```
 
 ## Usage
 
 Below is an outline of the API provided by `ExZipper.Zipper`. See the full
-documentation [here](http://hexdocs.pm/ex_zipper/ExZipper.Zipper.html) for usage examples
+documentation [here](https://hexdocs.pm/ex_zipper/ExZipper.Zipper.html) for usage examples
 
 ### Creating zippers
 
-`ExZipper` provides one zipper construction function for working with plain lists,
+`ExZipper.Zipper` provides one zipper construction function for working with plain lists,
 `ExZipper.Zipper.list_zipper/1`
 
     iex> Zipper.list_zipper([1,[],2,[3,[4,5]]])
@@ -39,7 +39,7 @@ where a branch's children are defined under the `:kids` key:
       ...>   fn node -> is_map(node) and Map.has_key?(node, :kids) end,
       ...>   fn %{kids: kids} -> kids end,
       ...>   fn node, new_kids -> %{node | kids: new_kids} end,
-      ...>   %{ value: "top", kids: [%{value: "first inner"}, %{value: "last inner}]}
+      ...>   %{ value: "top", kids: [%{value: "first inner"}, %{value: "last inner"}]}
       ...> )
 
 ### Navigating zippers
@@ -137,7 +137,7 @@ the edit is impossible (for example, trying to insert a child into a leaf node)
 
 ## License
 
-This library is released under the [UNLICENSE](UNLICENSE).
+This library is released under the [UNLICENSE](https://github.com/mikowitz/ex_zipper/blob/main/UNLICENSE).
 
 [huet]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
-[clojure]: clojure.github.io/clojure/clojure.zip-api.html
+[clojure]: https://clojure.github.io/clojure/clojure.zip-api.html
