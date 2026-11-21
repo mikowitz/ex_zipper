@@ -14,22 +14,26 @@ defmodule ExZipper.Zipper.Navigation do
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.node
       1
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.down
-      {:error, :down_from_leaf}
+      ** (ExZipper.Error) down_from_leaf
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.down
-      {:error, :down_from_empty_branch}
+      ** (ExZipper.Error) down_from_empty_branch
 
   """
   @spec down(Zipper.t()) :: Zipper.maybe_zipper()
   def down(zipper = %Zipper{}) do
     case Zipper.branch?(zipper) do
       false ->
-        {:error, :down_from_leaf}
+        ExZipper.raise_error(:down_from_leaf, zipper)
 
       true ->
         case Zipper.children(zipper) do
           [] ->
-            {:error, :down_from_empty_branch}
+            ExZipper.raise_error(:down_from_empty_branch, zipper)
 
           [new_focus | new_right] ->
             %Zipper{
@@ -50,6 +54,10 @@ defmodule ExZipper.Zipper.Navigation do
     end
   end
 
+  def down?(zipper = %Zipper{}) do
+    Zipper.branch?(zipper) and length(Zipper.children(zipper)) > 0
+  end
+
   @doc """
   Moves up to the parent of the current focus, or returns an error if already
   at the root of the zipper
@@ -57,14 +65,16 @@ defmodule ExZipper.Zipper.Navigation do
   ## Example
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.up(zipper)
-      {:error, :up_from_root}
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.up |> Zipper.node
       [1,[],[2,3,[4,5]]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.up(zipper)
+      ** (ExZipper.Error) up_from_root
+
   """
   @spec up(Zipper.t()) :: Zipper.maybe_zipper()
-  def up(%Zipper{crumbs: nil}), do: {:error, :up_from_root}
+  def up(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:up_from_root, zipper)
 
   def up(zipper = %Zipper{}) do
     new_children =
@@ -76,6 +86,9 @@ defmodule ExZipper.Zipper.Navigation do
     %{zipper | focus: new_focus, crumbs: zipper.crumbs.pnodes}
   end
 
+  def up?(%Zipper{crumbs: nil}), do: false
+  def up?(_), do: true
+
   @doc """
   Moves to the next sibling to the right of the current focus. Returns an error
   if at the root or already at the rightmost sibling at its depth in the tree.
@@ -83,19 +96,24 @@ defmodule ExZipper.Zipper.Navigation do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.right(zipper)
-      {:error, :right_from_root}
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.node
       []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.right
-      {:error, :right_from_rightmost}
+      ** (ExZipper.Error) right_from_rightmost
+
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.right(zipper)
+      ** (ExZipper.Error) right_from_root
 
   """
   @spec right(Zipper.t()) :: Zipper.maybe_zipper()
-  def right(%Zipper{crumbs: nil}), do: {:error, :right_from_root}
+  def right(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:right_from_root, zipper)
 
-  def right(%Zipper{crumbs: %{right: []}}) do
-    {:error, :right_from_rightmost}
+  def right(%Zipper{crumbs: %{right: []}} = zipper) do
+    ExZipper.raise_error(:right_from_rightmost, zipper)
   end
 
   def right(zipper = %Zipper{}) do
@@ -104,6 +122,10 @@ defmodule ExZipper.Zipper.Navigation do
     %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | left: new_left, right: new_right}}
   end
 
+  def right?(%Zipper{crumbs: nil}), do: false
+  def right?(%Zipper{crumbs: %{right: []}}), do: false
+  def right?(_), do: true
+
   @doc """
   Moves to the next sibling to the left of the current focus. Returns an error
   if at the root or already at the leftmost sibling at its depth in the tree.
@@ -111,23 +133,33 @@ defmodule ExZipper.Zipper.Navigation do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.left(zipper)
-      {:error, :left_from_root}
       iex> zipper |> Zipper.down |> Zipper.left
-      {:error, :left_from_leftmost}
+      ** (ExZipper.Error) left_from_leftmost
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.left |> Zipper.node
       []
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.left(zipper)
+      ** (ExZipper.Error) left_from_root
+
   """
   @spec left(Zipper.t()) :: Zipper.maybe_zipper()
-  def left(%Zipper{crumbs: nil}), do: {:error, :left_from_root}
-  def left(%Zipper{crumbs: %{left: []}}), do: {:error, :left_from_leftmost}
+  def left(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:left_from_root, zipper)
+
+  def left(%Zipper{crumbs: %{left: []}} = zipper),
+    do: ExZipper.raise_error(:left_from_leftmost, zipper)
 
   def left(zipper = %Zipper{}) do
     [new_focus | new_left] = zipper.crumbs.left
     new_right = [zipper.focus | zipper.crumbs.right]
     %{zipper | focus: new_focus, crumbs: %{zipper.crumbs | left: new_left, right: new_right}}
   end
+
+  def left?(%Zipper{crumbs: nil}), do: false
+  def left?(%Zipper{crumbs: %{left: []}}), do: false
+  def left?(_), do: true
 
   @doc """
   Moves to the leftmost sibling at the same depth as the current focus. Remains
@@ -137,16 +169,20 @@ defmodule ExZipper.Zipper.Navigation do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.rightmost(zipper)
-      {:error, :rightmost_from_root}
       iex> zipper |> Zipper.down |> Zipper.rightmost|> Zipper.node
       [2,3,[4,5]]
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.rightmost |> Zipper.node
       [2,3,[4,5]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.rightmost(zipper)
+      ** (ExZipper.Error) rightmost_from_root
+
   """
   @spec rightmost(Zipper.t()) :: Zipper.maybe_zipper()
-  def rightmost(%Zipper{crumbs: nil}), do: {:error, :rightmost_from_root}
+  def rightmost(%Zipper{crumbs: nil} = zipper),
+    do: ExZipper.raise_error(:rightmost_from_root, zipper)
+
   def rightmost(zipper = %Zipper{crumbs: %{right: []}}), do: zipper
 
   def rightmost(zipper = %Zipper{}) do
@@ -162,17 +198,22 @@ defmodule ExZipper.Zipper.Navigation do
 
   ## Examples
 
+
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.leftmost(zipper)
-      {:error, :leftmost_from_root}
       iex> zipper |> Zipper.down |> Zipper.leftmost |> Zipper.node
       1
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.right |> Zipper.leftmost |> Zipper.node
       1
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.leftmost(zipper)
+      ** (ExZipper.Error) leftmost_from_root
+
   """
   @spec leftmost(Zipper.t()) :: Zipper.maybe_zipper()
-  def leftmost(%Zipper{crumbs: nil}), do: {:error, :leftmost_from_root}
+  def leftmost(%Zipper{crumbs: nil} = zipper),
+    do: ExZipper.raise_error(:leftmost_from_root, zipper)
+
   def leftmost(zipper = %Zipper{crumbs: %{left: []}}), do: zipper
 
   def leftmost(zipper = %Zipper{}) do
@@ -211,10 +252,10 @@ defmodule ExZipper.Zipper.Navigation do
         zipper
 
       false ->
-        case {down(zipper), right(zipper)} do
-          {{:error, _}, {:error, _}} -> recur_next(zipper)
-          {{:error, _}, right_zipper} -> right_zipper
-          {down_zipper, _} -> down_zipper
+        case {down?(zipper), right?(zipper)} do
+          {false, false} -> recur_next(zipper)
+          {false, true} -> right(zipper)
+          {true, _} -> down(zipper)
         end
     end
   end
@@ -231,38 +272,42 @@ defmodule ExZipper.Zipper.Navigation do
       [1,[],[2,3,[4,5]]]
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.prev |> Zipper.node
       []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.down |> Zipper.rightmost
       ...> |> Zipper.down |> Zipper.rightmost |> Zipper.next |> Zipper.prev
-      {:error, :prev_of_end}
+      ** (ExZipper.Error) prev_of_end
 
   """
   @spec prev(Zipper.t()) :: Zipper.maybe_zipper()
-  def prev(%Zipper{crumbs: :end}), do: {:error, :prev_of_end}
+  def prev(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:prev_of_end, zipper)
   def prev(zipper = %Zipper{crumbs: nil}), do: zipper
 
   def prev(zipper = %Zipper{}) do
-    case left(zipper) do
-      {:error, _} -> up(zipper)
-      left_zipper -> recur_prev(left_zipper)
+    case left?(zipper) do
+      false -> up(zipper)
+      true -> zipper |> left() |> recur_prev()
     end
   end
 
   defp recur_prev(zipper = %Zipper{}) do
-    case down(zipper) do
-      {:error, _} -> zipper
-      child -> child |> rightmost |> recur_prev
+    case down?(zipper) do
+      false -> zipper
+      true -> zipper |> down() |> rightmost() |> recur_prev()
     end
   end
 
   defp recur_next(zipper = %Zipper{}) do
-    case up(zipper) do
-      {:error, _} ->
+    case up?(zipper) do
+      false ->
         %{zipper | crumbs: :end}
 
-      next_zipper ->
-        case right(next_zipper) do
-          {:error, _} -> recur_next(next_zipper)
-          new_zipper -> new_zipper
+      true ->
+        zipper = up(zipper)
+
+        case right?(zipper) do
+          true -> right(zipper)
+          false -> recur_next(zipper)
         end
     end
   end

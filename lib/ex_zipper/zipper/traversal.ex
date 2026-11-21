@@ -13,7 +13,7 @@ defmodule ExZipper.Zipper.Traversal do
   @doc """
   Walks the zipper depth-first from the current focus. Returns a zipper
   focused on the first node for which `fun` returns a truthy value. Returns
-  `{:error, :not_found}` if no node matches before the walk ends.
+  `nil` if no node matches before the walk ends.
 
   The current focus is checked first, so to find the next match after the
   one you have, call `ExZipper.Zipper.next/1` first.
@@ -26,7 +26,7 @@ defmodule ExZipper.Zipper.Traversal do
       iex> zipper |> Zipper.find(&(&1 == [4,5])) |> Zipper.path
       [[1,[],[2,3,[4,5]]],[2,3,[4,5]]]
       iex> Zipper.find(zipper, &(&1 == 6))
-      {:error, :not_found}
+      nil
 
   The search starts at the current focus, so it finds the focus itself if it
   matches. Nodes that come before the focus in the walk are not checked:
@@ -40,7 +40,7 @@ defmodule ExZipper.Zipper.Traversal do
       iex> zipper |> Zipper.next |> Zipper.find(&is_integer/1) |> Zipper.node
       2
       iex> zipper |> Zipper.next |> Zipper.find(&(&1 == 1))
-      {:error, :not_found}
+      nil
 
   """
   @spec find(Zipper.t(), (any() -> as_boolean(any()))) :: Zipper.maybe_zipper()
@@ -50,7 +50,7 @@ defmodule ExZipper.Zipper.Traversal do
 
   defp recur_find(zipper, fun) do
     if Zipper.end?(zipper) do
-      {:error, :not_found}
+      nil
     else
       if fun.(Zipper.node(zipper)) do
         zipper

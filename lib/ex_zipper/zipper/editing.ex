@@ -51,15 +51,17 @@ defmodule ExZipper.Zipper.Editing do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_left(zipper, 0)
-      {:error, :insert_left_of_root}
       iex> zipper |> Zipper.down |> Zipper.insert_left(0) |> Zipper.root |> Zipper.node
       [0,1,[],[2,3,[4,5]]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.insert_left(zipper, 0)
+      ** (ExZipper.Error) insert_left_of_root
+
   """
   @spec insert_left(Zipper.t(), any()) :: Zipper.maybe_zipper()
-  def insert_left(%Zipper{crumbs: nil}, _) do
-    {:error, :insert_left_of_root}
+  def insert_left(%Zipper{crumbs: nil} = zipper, _) do
+    ExZipper.raise_error(:insert_left_of_root, zipper)
   end
 
   def insert_left(zipper = %Zipper{}, node) do
@@ -73,15 +75,17 @@ defmodule ExZipper.Zipper.Editing do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.insert_right(zipper, 0)
-      {:error, :insert_right_of_root}
       iex> zipper |> Zipper.down |> Zipper.insert_right(0) |> Zipper.root |> Zipper.node
       [1,0,[],[2,3,[4,5]]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.insert_right(zipper, 0)
+      ** (ExZipper.Error) insert_right_of_root
+
   """
   @spec insert_right(Zipper.t(), any()) :: Zipper.maybe_zipper()
-  def insert_right(%Zipper{crumbs: nil}, _) do
-    {:error, :insert_right_of_root}
+  def insert_right(%Zipper{crumbs: nil} = zipper, _) do
+    ExZipper.raise_error(:insert_right_of_root, zipper)
   end
 
   def insert_right(zipper = %Zipper{}, node) do
@@ -97,15 +101,17 @@ defmodule ExZipper.Zipper.Editing do
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.insert_child(6) |> Zipper.node
       [6,1,[],[2,3,[4,5]]]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.insert_child(6)
-      {:error, :insert_child_of_leaf}
+      ** (ExZipper.Error) insert_child_of_leaf
 
   """
   @spec insert_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
   def insert_child(zipper = %Zipper{}, new_child) do
     case Zipper.branch?(zipper) do
       false ->
-        {:error, :insert_child_of_leaf}
+        ExZipper.raise_error(:insert_child_of_leaf, zipper)
 
       true ->
         new_focus =
@@ -124,15 +130,17 @@ defmodule ExZipper.Zipper.Editing do
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.append_child(6) |> Zipper.node
       [1,[],[2,3,[4,5]],6]
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.append_child(6)
-      {:error, :append_child_of_leaf}
+      ** (ExZipper.Error) append_child_of_leaf
 
   """
   @spec append_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
   def append_child(zipper = %Zipper{}, new_child) do
     case Zipper.branch?(zipper) do
       false ->
-        {:error, :append_child_of_leaf}
+        ExZipper.raise_error(:append_child_of_leaf, zipper)
 
       true ->
         new_children = Zipper.children(zipper) ++ [new_child]
@@ -148,26 +156,29 @@ defmodule ExZipper.Zipper.Editing do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.remove(zipper)
-      {:error, :remove_root}
       iex> zipper |> Zipper.down |> Zipper.remove |> Zipper.node
       [[],[2,3,[4,5]]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.remove(zipper)
+      ** (ExZipper.Error) remove_root
+
   """
   @spec remove(Zipper.t()) :: Zipper.maybe_zipper()
-  def remove(%Zipper{crumbs: nil}), do: {:error, :remove_root}
+  def remove(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:remove_root, zipper)
 
   def remove(zipper = %Zipper{}) do
-    case Zipper.left(zipper) do
-      {:error, _} ->
+    case Zipper.Navigation.left?(zipper) do
+      false ->
         parent_zipper = Zipper.up(zipper)
         [_ | new_children] = Zipper.children(parent_zipper)
         new_focus = Zipper.make_node(zipper, parent_zipper.focus, new_children)
         %{parent_zipper | focus: new_focus}
 
-      left_zipper ->
-        [_ | new_right] = left_zipper.crumbs.right
-        %{left_zipper | crumbs: %{left_zipper.crumbs | right: new_right}}
+      true ->
+        zipper = Zipper.left(zipper)
+        [_ | new_right] = zipper.crumbs.right
+        %{zipper | crumbs: %{zipper.crumbs | right: new_right}}
     end
   end
 end

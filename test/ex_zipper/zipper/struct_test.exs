@@ -1,6 +1,7 @@
 defmodule ExZipper.Zipper.StructTest do
   use ExUnit.Case, async: true
   alias ExZipper.Zipper, as: Z
+  import ExZipper.TestHelpers
 
   defmodule Measure do
     defstruct [:time_signature, :music]
@@ -68,14 +69,14 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "down/1" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = %{context.zipper | focus: %Note{note: "cs4"}}
-      assert Z.down(zipper) == {:error, :down_from_leaf}
+      assert_zipper_error(:down_from_leaf, fn -> Z.down(zipper) end)
     end
 
-    test "returns an error if called on an empty branch", context do
+    test "raises an ExZipper.Error if called on an empty branch", context do
       zipper = %{context.zipper | focus: %Voice{name: "empty", music: []}}
-      assert Z.down(zipper) == {:error, :down_from_empty_branch}
+      assert_zipper_error(:down_from_empty_branch, fn -> Z.down(zipper) end)
     end
 
     test "moves focus to the first child of the current focus", context do
@@ -93,13 +94,13 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "right/1" do
-    test "returns an error if called on the root", context do
-      assert Z.right(context.zipper) == {:error, :right_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:right_from_root, fn -> Z.right(context.zipper) end)
     end
 
-    test "returns an error if called on the rightmost sibling", context do
+    test "raises an ExZipper.Error if called on the rightmost sibling", context do
       zipper = context.zipper |> Z.down() |> Z.right() |> Z.right() |> Z.right() |> Z.right()
-      assert Z.right(zipper) == {:error, :right_from_rightmost}
+      assert_zipper_error(:right_from_rightmost, fn -> Z.right(zipper) end)
     end
 
     test "moves focus to the sibling to the right of the current focus", context do
@@ -118,13 +119,13 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "left" do
-    test "returns an error if called on the root", context do
-      assert Z.left(context.zipper) == {:error, :left_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:left_from_root, fn -> Z.left(context.zipper) end)
     end
 
-    test "returns an error if called on the leftmost sibling", context do
+    test "raises an ExZipper.Error if called on the leftmost sibling", context do
       zipper = Z.down(context.zipper)
-      assert Z.left(zipper) == {:error, :left_from_leftmost}
+      assert_zipper_error(:left_from_leftmost, fn -> Z.left(zipper) end)
     end
 
     test "moves focus to the sibling to the left of the current focus", context do
@@ -144,8 +145,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "up" do
-    test "returns an error if called on root", context do
-      assert Z.up(context.zipper) == {:error, :up_from_root}
+    test "raises an ExZipper.Error if called on root", context do
+      assert_zipper_error(:up_from_root, fn -> Z.up(context.zipper) end)
     end
 
     test "moves focus to the current focus' parent", context do
@@ -188,8 +189,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "rightmost" do
-    test "returns an error if called on the root", context do
-      assert Z.rightmost(context.zipper) == {:error, :rightmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rightmost_from_root, fn -> Z.rightmost(context.zipper) end)
     end
 
     test "moves focus to the rightmost sibling of the current focus", context do
@@ -237,8 +238,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "leftmost" do
-    test "returns an error if called on the root", context do
-      assert Z.leftmost(context.zipper) == {:error, :leftmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:leftmost_from_root, fn -> Z.leftmost(context.zipper) end)
     end
 
     test "moves focus to the leftmost sibling of the current focus", context do
@@ -311,8 +312,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "lefts" do
-    test "returns an error if called on the root", context do
-      assert Z.lefts(context.zipper) == {:error, :lefts_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:lefts_of_root, fn -> Z.lefts(context.zipper) end)
     end
 
     test "returns all siblings to the left of the current focus", context do
@@ -327,8 +328,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "rights" do
-    test "returns an error if called on the root", context do
-      assert Z.rights(context.zipper) == {:error, :rights_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rights_of_root, fn -> Z.rights(context.zipper) end)
     end
 
     test "returns all siblings to the right of the current focus", context do
@@ -457,10 +458,10 @@ defmodule ExZipper.Zipper.StructTest do
       assert Z.children(context.zipper) == context.measure.music
     end
 
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.children(zipper) == {:error, :children_of_leaf}
+      assert_zipper_error(:children_of_leaf, fn -> Z.children(zipper) end)
     end
   end
 
@@ -558,8 +559,10 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_left" do
-    test "returns an error if called on the root", context do
-      assert Z.insert_left(context.zipper, %Note{note: "bf,16"}) == {:error, :insert_left_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_left_of_root, fn ->
+        Z.insert_left(context.zipper, %Note{note: "bf,16"})
+      end)
     end
 
     test "inserts the provided node to the left of the current focus, without changing focus",
@@ -602,9 +605,10 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_right" do
-    test "returns an error if called on the root", context do
-      assert Z.insert_right(context.zipper, %Note{note: "bf,16"}) ==
-               {:error, :insert_right_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_right_of_root, fn ->
+        Z.insert_right(context.zipper, %Note{note: "bf,16"})
+      end)
     end
 
     test "inserts the provided node to the right of the current focus, without changing focus",
@@ -647,10 +651,12 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.insert_child(zipper, %Note{note: "bf8"}) == {:error, :insert_child_of_leaf}
+      assert_zipper_error(:insert_child_of_leaf, fn ->
+        Z.insert_child(zipper, %Note{note: "bf8"})
+      end)
     end
 
     test "adds a node as the leftmost child of the current focus", context do
@@ -693,10 +699,12 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "append_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.append_child(zipper, %Note{note: "bf8"}) == {:error, :append_child_of_leaf}
+      assert_zipper_error(:append_child_of_leaf, fn ->
+        Z.append_child(zipper, %Note{note: "bf8"})
+      end)
     end
 
     test "adds a node as the leftmost child of the current focus", context do
@@ -836,7 +844,7 @@ defmodule ExZipper.Zipper.StructTest do
         |> Z.next()
 
       assert Z.end?(zipper)
-      assert Z.prev(zipper) == {:error, :prev_of_end}
+      assert_zipper_error(:prev_of_end, fn -> Z.prev(zipper) end)
     end
   end
 
@@ -866,8 +874,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "remove" do
-    test "returns an error when called on the root", context do
-      assert Z.remove(context.zipper) == {:error, :remove_root}
+    test "raises an ExZipper.Error when called on the root", context do
+      assert_zipper_error(:remove_root, fn -> Z.remove(context.zipper) end)
     end
 
     test "removes the current focus, and moves to the prev location in a depth-first walk",
@@ -1051,8 +1059,8 @@ defmodule ExZipper.Zipper.StructTest do
              }
     end
 
-    test "returns an error if no node matches the predicate", context do
-      assert Z.find(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == {:error, :not_found}
+    test "returns nil if no node matches the predicate", context do
+      assert Z.find(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == nil
     end
   end
 

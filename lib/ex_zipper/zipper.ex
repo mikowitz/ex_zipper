@@ -125,16 +125,18 @@ defmodule ExZipper.Zipper do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.lefts(zipper)
-      {:error, :lefts_of_root}
       iex> zipper |> Zipper.down |> Zipper.lefts
       []
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.lefts
       [1,[]]
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.lefts(zipper)
+      ** (ExZipper.Error) lefts_of_root
+
   """
   @spec lefts(Zipper.t()) :: [any()] | Zipper.error()
-  def lefts(%__MODULE__{crumbs: nil}), do: {:error, :lefts_of_root}
+  def lefts(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:lefts_of_root, zipper)
   def lefts(%__MODULE__{crumbs: %{left: left}}), do: Enum.reverse(left)
 
   @doc """
@@ -144,16 +146,18 @@ defmodule ExZipper.Zipper do
   ## Examples
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
-      iex> Zipper.rights(zipper)
-      {:error, :rights_of_root}
       iex> zipper |> Zipper.down |> Zipper.rights
       [[],[2,3,[4,5]]]
       iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.rights
       []
 
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> Zipper.rights(zipper)
+      ** (ExZipper.Error) rights_of_root
+
   """
   @spec rights(Zipper.t()) :: [any()] | Zipper.error()
-  def rights(%__MODULE__{crumbs: nil}), do: {:error, :rights_of_root}
+  def rights(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:rights_of_root, zipper)
   def rights(%__MODULE__{crumbs: %{right: right}}), do: right
 
   @doc """
@@ -204,17 +208,21 @@ defmodule ExZipper.Zipper do
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.children(zipper)
       [1,[],[2,3,[4,5]]]
-      iex> zipper |> Zipper.down |> Zipper.children
-      {:error, :children_of_leaf}
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.right |> Zipper.children
       []
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.children
+      ** (ExZipper.Error) children_of_leaf
 
   """
   @spec children(Zipper.t()) :: [any()] | Zipper.error()
   def children(zipper = %__MODULE__{}) do
     case branch?(zipper) do
       true -> zipper.functions.children.(zipper.focus)
-      false -> {:error, :children_of_leaf}
+      false -> ExZipper.raise_error(:children_of_leaf, zipper)
     end
   end
 

@@ -1,6 +1,7 @@
 defmodule ExZipper.Zipper.ListTest do
   use ExUnit.Case, async: true
   alias ExZipper.Zipper
+  import ExZipper.TestHelpers
 
   setup do
     list = [1, [], 2, [3, 4, [5, 6], [7]], 8]
@@ -23,14 +24,14 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "down/1" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = %{context.zipper | focus: 11}
-      assert Zipper.down(zipper) == {:error, :down_from_leaf}
+      assert_zipper_error(:down_from_leaf, fn -> Zipper.down(zipper) end)
     end
 
-    test "returns an error if called on an empty branch", context do
+    test "raises an ExZipper.Error if called on an empty branch", context do
       zipper = %{context.zipper | focus: []}
-      assert Zipper.down(zipper) == {:error, :down_from_empty_branch}
+      assert_zipper_error(:down_from_empty_branch, fn -> Zipper.down(zipper) end)
     end
 
     test "moves focus to the first child of the current focus", context do
@@ -47,11 +48,11 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "right/1" do
-    test "returns an error if called on the root", context do
-      assert Zipper.right(context.zipper) == {:error, :right_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:right_from_root, fn -> Zipper.right(context.zipper) end)
     end
 
-    test "returns an error if called on the rightmost sibling", context do
+    test "raises an ExZipper.Error if called on the rightmost sibling", context do
       zipper =
         context.zipper
         |> Zipper.down()
@@ -60,7 +61,7 @@ defmodule ExZipper.Zipper.ListTest do
         |> Zipper.right()
         |> Zipper.right()
 
-      assert Zipper.right(zipper) == {:error, :right_from_rightmost}
+      assert_zipper_error(:right_from_rightmost, fn -> Zipper.right(zipper) end)
     end
 
     test "moves focus to the sibling to the right of the current focus", context do
@@ -78,13 +79,13 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "left" do
-    test "returns an error if called on the root", context do
-      assert Zipper.left(context.zipper) == {:error, :left_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:left_from_root, fn -> Zipper.left(context.zipper) end)
     end
 
-    test "returns an error if called on the leftmost sibling", context do
+    test "raises an ExZipper.Error if called on the leftmost sibling", context do
       zipper = Zipper.down(context.zipper)
-      assert Zipper.left(zipper) == {:error, :left_from_leftmost}
+      assert_zipper_error(:left_from_leftmost, fn -> Zipper.left(zipper) end)
     end
 
     test "moves focus to the sibling to the left of the current focus", context do
@@ -104,8 +105,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "up" do
-    test "returns an error if called on root", context do
-      assert Zipper.up(context.zipper) == {:error, :up_from_root}
+    test "raises an ExZipper.Error if called on root", context do
+      assert_zipper_error(:up_from_root, fn -> Zipper.up(context.zipper) end)
     end
 
     test "moves focus to the current focus' parent", context do
@@ -139,8 +140,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "rightmost" do
-    test "returns an error if called on the root", context do
-      assert Zipper.rightmost(context.zipper) == {:error, :rightmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rightmost_from_root, fn -> Zipper.rightmost(context.zipper) end)
     end
 
     test "moves focus to the rightmost sibling of the current focus", context do
@@ -164,8 +165,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "leftmost" do
-    test "returns an error if called on the root", context do
-      assert Zipper.leftmost(context.zipper) == {:error, :leftmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:leftmost_from_root, fn -> Zipper.leftmost(context.zipper) end)
     end
 
     test "moves focus to the leftmost sibling of the current focus", context do
@@ -234,8 +235,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "lefts" do
-    test "returns an error if called on the root", context do
-      assert Zipper.lefts(context.zipper) == {:error, :lefts_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:lefts_of_root, fn -> Zipper.lefts(context.zipper) end)
     end
 
     test "returns all siblings to the left of the current focus", context do
@@ -250,8 +251,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "rights" do
-    test "returns an error if called on the root", context do
-      assert Zipper.rights(context.zipper) == {:error, :rights_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rights_of_root, fn -> Zipper.rights(context.zipper) end)
     end
 
     test "returns all siblings to the right of the current focus", context do
@@ -303,10 +304,10 @@ defmodule ExZipper.Zipper.ListTest do
       assert Zipper.children(context.zipper) == context.list
     end
 
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Zipper.down(context.zipper)
 
-      assert Zipper.children(zipper) == {:error, :children_of_leaf}
+      assert_zipper_error(:children_of_leaf, fn -> Zipper.children(zipper) end)
     end
   end
 
@@ -344,8 +345,10 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "insert_left" do
-    test "returns an error if called on the root", context do
-      assert Zipper.insert_left(context.zipper, [10, 11, 12]) == {:error, :insert_left_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_left_of_root, fn ->
+        Zipper.insert_left(context.zipper, [10, 11, 12])
+      end)
     end
 
     test "inserts the provided node to the left of the current focus, without changing focus",
@@ -359,8 +362,10 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "insert_right" do
-    test "returns an error if called on the root", context do
-      assert Zipper.insert_right(context.zipper, [10, 11, 12]) == {:error, :insert_right_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_right_of_root, fn ->
+        Zipper.insert_right(context.zipper, [10, 11, 12])
+      end)
     end
 
     test "inserts the provided node to the right of the current focus, without changing focus",
@@ -374,10 +379,10 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "insert_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Zipper.down(context.zipper)
 
-      assert Zipper.insert_child(zipper, 11) == {:error, :insert_child_of_leaf}
+      assert_zipper_error(:insert_child_of_leaf, fn -> Zipper.insert_child(zipper, 11) end)
     end
 
     test "adds a node as the leftmost child of the current focus", context do
@@ -392,10 +397,10 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "append_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Zipper.down(context.zipper)
 
-      assert Zipper.append_child(zipper, 11) == {:error, :append_child_of_leaf}
+      assert_zipper_error(:append_child_of_leaf, fn -> Zipper.append_child(zipper, 11) end)
     end
 
     test "adds a node as the rightmost child of the current focus", context do
@@ -507,7 +512,7 @@ defmodule ExZipper.Zipper.ListTest do
         |> Zipper.next()
 
       assert Zipper.end?(zipper)
-      assert Zipper.prev(zipper) == {:error, :prev_of_end}
+      assert_zipper_error(:prev_of_end, fn -> Zipper.prev(zipper) end)
     end
   end
 
@@ -549,8 +554,8 @@ defmodule ExZipper.Zipper.ListTest do
   end
 
   describe "remove" do
-    test "returns an error when called on the root", context do
-      assert Zipper.remove(context.zipper) == {:error, :remove_root}
+    test "raises an ExZipper.Error when called on the root", context do
+      assert_zipper_error(:remove_root, fn -> Zipper.remove(context.zipper) end)
     end
 
     test "removes the current focus, and moves to the prev location in a depth-first walk",
@@ -618,7 +623,7 @@ defmodule ExZipper.Zipper.ListTest do
       zipper =
         context.zipper |> Zipper.down() |> Zipper.right() |> Zipper.right() |> Zipper.right()
 
-      assert Zipper.find(zipper, &(&1 == 1)) == {:error, :not_found}
+      assert Zipper.find(zipper, &(&1 == 1)) == nil
       assert Zipper.find(zipper, &(&1 == 8)).focus == 8
     end
 
@@ -642,14 +647,14 @@ defmodule ExZipper.Zipper.ListTest do
       assert zipper.focus == [1, [], 2, [3, 4, :replaced, [7]], 8]
     end
 
-    test "returns an error if no node matches the predicate", context do
-      assert Zipper.find(context.zipper, &(&1 == 99)) == {:error, :not_found}
+    test "returns nil if no node matches the predicate", context do
+      assert Zipper.find(context.zipper, &(&1 == 99)) == nil
     end
 
-    test "returns an error if called on the end of the walk", context do
+    test "returns nil if called on the end of the walk", context do
       zipper = %{context.zipper | crumbs: :end}
 
-      assert Zipper.find(zipper, fn _ -> true end) == {:error, :not_found}
+      assert Zipper.find(zipper, fn _ -> true end) == nil
     end
   end
 
