@@ -46,7 +46,7 @@ defmodule ExZipper.Zipper.Editing do
 
   @doc """
   Inserts a new node as a new sibling to the immediate left of the current focus.
-  Does not change focus. Returns an error if called on the root.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root.
 
   ## Examples
 
@@ -59,7 +59,7 @@ defmodule ExZipper.Zipper.Editing do
       ** (ExZipper.Error) Cannot insert to the left of the root
 
   """
-  @spec insert_left(Zipper.t(), any()) :: Zipper.maybe_zipper()
+  @spec insert_left(Zipper.t(), any()) :: Zipper.t()
   def insert_left(%Zipper{crumbs: nil} = zipper, _) do
     ExZipper.raise_error(:insert_left_of_root, zipper)
   end
@@ -70,7 +70,7 @@ defmodule ExZipper.Zipper.Editing do
 
   @doc """
   Inserts a new node as a new sibling to the immediate right of the current focus.
-  Does not change focus. Returns an error if called on the root.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root.
 
   ## Examples
 
@@ -83,7 +83,7 @@ defmodule ExZipper.Zipper.Editing do
       ** (ExZipper.Error) Cannot insert to the right of the root
 
   """
-  @spec insert_right(Zipper.t(), any()) :: Zipper.maybe_zipper()
+  @spec insert_right(Zipper.t(), any()) :: Zipper.t()
   def insert_right(%Zipper{crumbs: nil} = zipper, _) do
     ExZipper.raise_error(:insert_right_of_root, zipper)
   end
@@ -93,8 +93,8 @@ defmodule ExZipper.Zipper.Editing do
   end
 
   @doc """
-  Inserts a child as the leftmost child of the current focus. Returns an error
-  if called on a leaf.
+  Inserts a child as the leftmost child of the current focus. Raises an
+  `ExZipper.Error` if called on a leaf.
 
   ## Examples
 
@@ -107,7 +107,7 @@ defmodule ExZipper.Zipper.Editing do
       ** (ExZipper.Error) Cannot insert a child into a leaf
 
   """
-  @spec insert_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
+  @spec insert_child(Zipper.t(), any()) :: Zipper.t()
   def insert_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
@@ -122,8 +122,8 @@ defmodule ExZipper.Zipper.Editing do
   end
 
   @doc """
-  Appends a child as the rightmost child of the current focus. Returns an error
-  if called on a leaf.
+  Appends a child as the rightmost child of the current focus. Raises an
+  `ExZipper.Error` if called on a leaf.
 
   ## Examples
 
@@ -136,7 +136,7 @@ defmodule ExZipper.Zipper.Editing do
       ** (ExZipper.Error) Cannot append a child to a leaf
 
   """
-  @spec append_child(Zipper.t(), any()) :: Zipper.maybe_zipper()
+  @spec append_child(Zipper.t(), any()) :: Zipper.t()
   def append_child(%Zipper{} = zipper, new_child) do
     case Zipper.branch?(zipper) do
       false ->
@@ -151,7 +151,7 @@ defmodule ExZipper.Zipper.Editing do
 
   @doc """
   Removes the current focus from the zipper, moving focus to the node previous
-  to the current focus in a depth-first walk. Will return an error if called on the root
+  to the current focus in a depth-first walk. Raises an `ExZipper.Error` if called on the root.
 
   ## Examples
 
@@ -164,7 +164,7 @@ defmodule ExZipper.Zipper.Editing do
       ** (ExZipper.Error) Cannot remove root
 
   """
-  @spec remove(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec remove(Zipper.t()) :: Zipper.t()
   def remove(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:remove_root, zipper)
 
   def remove(%Zipper{} = zipper) do

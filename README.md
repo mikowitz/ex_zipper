@@ -44,8 +44,9 @@ where a branch's children are defined under the `:kids` key:
 
 ### Navigating zippers
 
-The following functions move through a zipper and return either a new zipper,
-or an error of the form `{:error, :atom_describing_the_error}`
+The following functions move through a zipper and return a new zipper. If the
+move is impossible (for example, moving down from a leaf), they raise an
+`ExZipper.Error` whose `:reason` field describes what went wrong.
 
 * `Zipper.down` moves to the first (leftmost) child of the current node
 * `Zipper.up` moves to the parent of the current node
@@ -69,9 +70,8 @@ moving as deep down one branch of the tree before moving laterally.
 ### Editing zippers
 
 The following functions modify the zipper without shifting focus away
-from the current node. They will return a zipper, or an error, if called
-with an invalid zipper as input (for example, trying to insert a child into
-a leaf node)
+from the current node. They return a zipper, or raise an `ExZipper.Error` if
+the edit is impossible (for example, trying to insert a child into a leaf node)
 
 * `Zipper.insert_child` inserts a new child as the first (leftmost) child
   of the current node, without moving focus from the current node
@@ -99,8 +99,8 @@ a leaf node)
 
 * `Zipper.branch?` returns true if the current node is a branch (that is, if it
   can have children, even if it currently does not have any)
-* `Zipper.children` returns a list of the current node's children, or an error
-  if called on a leaf
+* `Zipper.children` returns a list of the current node's children, or raises an
+  `ExZipper.Error` if called on a leaf
 * `Zipper.make_node` takes a zipper, a node, and a list of children and returns
   a new node constructed from the second and third arguments. The first argument,
   the zipper, is passed only to provide context on how to construct the new node.

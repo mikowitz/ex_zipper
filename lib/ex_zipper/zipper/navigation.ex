@@ -6,8 +6,8 @@ defmodule ExZipper.Zipper.Navigation do
   alias ExZipper.Zipper
 
   @doc """
-  Moves to the leftmost child of the current focus, or returns an error if
-  the current focus is a leaf or an empty branch.
+  Moves to the leftmost child of the current focus. Raises an `ExZipper.Error`
+  if the current focus is a leaf or an empty branch.
 
   ## Example
 
@@ -24,7 +24,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot move down onto an empty branch
 
   """
-  @spec down(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec down(Zipper.t()) :: Zipper.t()
   def down(%Zipper{} = zipper) do
     case Zipper.branch?(zipper) do
       false ->
@@ -59,8 +59,8 @@ defmodule ExZipper.Zipper.Navigation do
   end
 
   @doc """
-  Moves up to the parent of the current focus, or returns an error if already
-  at the root of the zipper
+  Moves up to the parent of the current focus. Raises an `ExZipper.Error` if
+  already at the root of the zipper.
 
   ## Example
 
@@ -73,7 +73,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot move up from the root
 
   """
-  @spec up(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec up(Zipper.t()) :: Zipper.t()
   def up(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:up_from_root, zipper)
 
   def up(%Zipper{} = zipper) do
@@ -90,8 +90,9 @@ defmodule ExZipper.Zipper.Navigation do
   def up?(_), do: true
 
   @doc """
-  Moves to the next sibling to the right of the current focus. Returns an error
-  if at the root or already at the rightmost sibling at its depth in the tree.
+  Moves to the next sibling to the right of the current focus. Raises an
+  `ExZipper.Error` if at the root or already at the rightmost sibling at its
+  depth in the tree.
 
   ## Examples
 
@@ -109,7 +110,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot move right from the root
 
   """
-  @spec right(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec right(Zipper.t()) :: Zipper.t()
   def right(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:right_from_root, zipper)
 
   def right(%Zipper{crumbs: %{right: []}} = zipper) do
@@ -127,8 +128,9 @@ defmodule ExZipper.Zipper.Navigation do
   def right?(_), do: true
 
   @doc """
-  Moves to the next sibling to the left of the current focus. Returns an error
-  if at the root or already at the leftmost sibling at its depth in the tree.
+  Moves to the next sibling to the left of the current focus. Raises an
+  `ExZipper.Error` if at the root or already at the leftmost sibling at its
+  depth in the tree.
 
   ## Examples
 
@@ -145,7 +147,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot move left from the root
 
   """
-  @spec left(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec left(Zipper.t()) :: Zipper.t()
   def left(%Zipper{crumbs: nil} = zipper), do: ExZipper.raise_error(:left_from_root, zipper)
 
   def left(%Zipper{crumbs: %{left: []}} = zipper),
@@ -162,9 +164,9 @@ defmodule ExZipper.Zipper.Navigation do
   def left?(_), do: true
 
   @doc """
-  Moves to the leftmost sibling at the same depth as the current focus. Remains
-  in place if already focused on the leftmost sibling. Returns an error if
-  called on the root.
+  Moves to the rightmost sibling at the same depth as the current focus. Remains
+  in place if already focused on the rightmost sibling. Raises an
+  `ExZipper.Error` if called on the root.
 
   ## Examples
 
@@ -179,7 +181,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot call rightmost from the root
 
   """
-  @spec rightmost(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec rightmost(Zipper.t()) :: Zipper.t()
   def rightmost(%Zipper{crumbs: nil} = zipper),
     do: ExZipper.raise_error(:rightmost_from_root, zipper)
 
@@ -193,8 +195,8 @@ defmodule ExZipper.Zipper.Navigation do
 
   @doc """
   Moves to the leftmost sibling at the same depth as the current focus. Remains
-  in place if already focused on the leftmost sibling. Returns an error if
-  called on the root.
+  in place if already focused on the leftmost sibling. Raises an
+  `ExZipper.Error` if called on the root.
 
   ## Examples
 
@@ -210,7 +212,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot call leftmost from the root
 
   """
-  @spec leftmost(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec leftmost(Zipper.t()) :: Zipper.t()
   def leftmost(%Zipper{crumbs: nil} = zipper),
     do: ExZipper.raise_error(:leftmost_from_root, zipper)
 
@@ -261,8 +263,8 @@ defmodule ExZipper.Zipper.Navigation do
   end
 
   @doc """
-  Moves to the previous focus in a depth-first walk through the zipper. Returns
-  an error if called on the end of the walk. Returns the root if called on
+  Moves to the previous focus in a depth-first walk through the zipper. Raises
+  an `ExZipper.Error` if called on the end of the walk. Returns the root if called on
   the root.
 
   ## Examples
@@ -279,7 +281,7 @@ defmodule ExZipper.Zipper.Navigation do
       ** (ExZipper.Error) Cannot call previous from the end
 
   """
-  @spec prev(Zipper.t()) :: Zipper.maybe_zipper()
+  @spec prev(Zipper.t()) :: Zipper.t()
   def prev(%Zipper{crumbs: :end} = zipper), do: ExZipper.raise_error(:prev_of_end, zipper)
   def prev(%Zipper{crumbs: nil} = zipper), do: zipper
 

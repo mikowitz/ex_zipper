@@ -6,11 +6,11 @@ defmodule ExZipper.Zipper do
   Zippers provide a method of navigating and editing a tree while maintaining
   enough state data to reconstruct the tree from the currently focused node.
 
-  For the most part, functions defined on `ExZipper.Zipper` return either an
-  `ExZipper.Zipper` struct or an error tuple of the form `{:error, :error_type}`,
-  if the function tries to move to a point on the tree that doesn't exist.
-  This allows easy chaining of functions with a quick failure mode if any function
-  in the chain returns an error.
+  Navigation and editing functions return a new `ExZipper.Zipper` struct, so
+  they can be chained with `|>`. If a function can't be performed on the
+  current focus (for example, moving down from a leaf or inserting a sibling
+  next to the root), it raises an `ExZipper.Error` whose `:reason` says what
+  went wrong. A chain stops at the first step that fails.
 
   [huet]: https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf
   [clojure]: https://clojure.github.io/clojure/clojure.zip-api.html
@@ -21,8 +21,6 @@ defmodule ExZipper.Zipper do
   defstruct [:focus, :crumbs, :functions]
 
   @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}
-  @type error :: {:error, atom}
-  @type maybe_zipper :: Zipper.t() | Zipper.error()
 
   @doc """
   Returns a new zipper with `root` as the root tree of the zipper, and
@@ -119,8 +117,8 @@ defmodule ExZipper.Zipper do
   def root(%__MODULE__{} = zipper), do: zipper |> up |> root
 
   @doc """
-  Returns all left siblings of the current focus. Returns an error if called
-  on the root.
+  Returns all left siblings of the current focus. Raises an `ExZipper.Error`
+  if called on the root.
 
   ## Examples
 
@@ -135,13 +133,13 @@ defmodule ExZipper.Zipper do
       ** (ExZipper.Error) Cannot query lefts of the root
 
   """
-  @spec lefts(Zipper.t()) :: [any()] | Zipper.error()
+  @spec lefts(Zipper.t()) :: [any()]
   def lefts(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:lefts_of_root, zipper)
   def lefts(%__MODULE__{crumbs: %{left: left}}), do: Enum.reverse(left)
 
   @doc """
-  Returns all left right of the current focus. Returns an error if called
-  on the root.
+  Returns all right siblings of the current focus. Raises an `ExZipper.Error`
+  if called on the root.
 
   ## Examples
 
@@ -156,7 +154,7 @@ defmodule ExZipper.Zipper do
       ** (ExZipper.Error) Cannot query rights of the root
 
   """
-  @spec rights(Zipper.t()) :: [any()] | Zipper.error()
+  @spec rights(Zipper.t()) :: [any()]
   def rights(%__MODULE__{crumbs: nil} = zipper), do: ExZipper.raise_error(:rights_of_root, zipper)
   def rights(%__MODULE__{crumbs: %{right: right}}), do: right
 
@@ -201,7 +199,8 @@ defmodule ExZipper.Zipper do
   end
 
   @doc """
-  Returns the children of the current focus, or an error if called on a leaf.
+  Returns the children of the current focus. Raises an `ExZipper.Error` if
+  called on a leaf.
 
   ## Examples
 
@@ -218,7 +217,7 @@ defmodule ExZipper.Zipper do
       ** (ExZipper.Error) Cannot query children of a leaf
 
   """
-  @spec children(Zipper.t()) :: [any()] | Zipper.error()
+  @spec children(Zipper.t()) :: [any()]
   def children(%__MODULE__{} = zipper) do
     case branch?(zipper) do
       true -> zipper.functions.children.(zipper.focus)
