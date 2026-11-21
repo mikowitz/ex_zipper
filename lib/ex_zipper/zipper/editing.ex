@@ -159,13 +159,40 @@ defmodule ExZipper.Zipper.Editing do
 
   @doc """
   Removes the current focus from the zipper, moving focus to the node previous
-  to the current focus in a depth-first walk. Raises an `ExZipper.Error` if called on the root.
+  to the current focus in a depth-first walk. Raises an `ExZipper.Error` if
+  called on the root or at the end of a walk.
+
+  If the removed node has a left sibling, focus moves to the deepest rightmost
+  descendant of that sibling, or to the sibling itself if it is a leaf or an
+  empty branch. Otherwise focus moves to the parent, which no longer contains
+  the removed node.
 
   ## Examples
+
+  Removing the leftmost child moves focus to the parent, without that child:
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> zipper |> Zipper.down |> Zipper.remove |> Zipper.node
       [[],[2,3,[4,5]]]
+
+  Removing a node whose left sibling is a branch moves focus to the last node
+  inside that branch:
+
+      iex> zipper = Zipper.list_zipper([1,[2,[3,4]],5])
+      iex> zipper = zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove
+      iex> Zipper.node(zipper)
+      4
+      iex> zipper |> Zipper.root |> Zipper.node
+      [1,[2,[3,4]]]
+
+  Removing a node whose left sibling is a leaf or an empty branch moves focus
+  to that sibling:
+
+      iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
+      iex> zipper |> Zipper.down |> Zipper.rightmost |> Zipper.remove |> Zipper.node
+      []
+
+  Removing the root raises:
 
       iex> zipper = Zipper.list_zipper([1,[],[2,3,[4,5]]])
       iex> Zipper.remove(zipper)
