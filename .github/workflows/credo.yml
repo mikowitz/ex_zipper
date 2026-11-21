@@ -8,30 +8,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: "[${{matrix.otp}}/${{matrix.elixir}}] CI Tests"
-    strategy:
-      matrix:
-        otp: [27, 28, 29]
-        elixir: ['1.17', '1.18', '1.19', '1.20']
-        exclude:
-          - elixir: '1.17'
-            otp: 28
-          - elixir: '1.17'
-            otp: 29
-          - elixir: '1.18'
-            otp: 28
-          - elixir: '1.18'
-            otp: 29
-          - elixir: '1.19'
-            otp: 29
+    name: Credo
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          otp-version: 29
+          elixir-version: 1.20
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: cache-deps
         with:
@@ -39,7 +24,7 @@ jobs:
             deps
             _build
             !_build/test/lib/ex_png
-          key: ${{runner.os}}-${{matrix.elixir}}-${{matrix.otp}}-deps-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          key: ${{runner.os}}-1.20-credo-deps-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - if: steps.cache-deps.outputs.cache-hit != 'true'
         run: mix deps.get
       - if: steps.cache-deps.outputs.cache-hit != 'true'
