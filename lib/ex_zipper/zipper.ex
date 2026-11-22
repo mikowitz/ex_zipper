@@ -20,7 +20,7 @@ defmodule ExZipper.Zipper do
 
   defstruct [:focus, :crumbs, :functions]
 
-  @type t :: %__MODULE__{focus: any(), crumbs: nil | map(), functions: map()}
+  @type t :: %__MODULE__{focus: any(), crumbs: nil | :end | map(), functions: map()}
 
   @doc """
   Returns a new zipper with `root` as the root tree of the zipper, and
@@ -103,8 +103,8 @@ defmodule ExZipper.Zipper do
   Returns to the root of the zipper. Remains in place if already on the root.
 
   This is also the only way to leave the end of a depth-first walk (see
-  `end?/1`). Once a walk is exhausted, other navigation functions raise an
-  `ExZipper.Error` until `root/1` is called.
+  `end?/1`). Once a walk is exhausted, every function that moves or changes
+  the zipper raises an `ExZipper.Error` until `root/1` is called.
 
   ## Examples
 
@@ -127,7 +127,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Returns all left siblings of the current focus. Raises an `ExZipper.Error`
-  if called on the root.
+  if called on the root or at the end of a walk.
 
   ## Examples
 
@@ -149,7 +149,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Returns all right siblings of the current focus. Raises an `ExZipper.Error`
-  if called on the root.
+  if called on the root or at the end of a walk.
 
   ## Examples
 
@@ -171,7 +171,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Returns a path of nodes leading from the root to, but excluding, the current
-  focus. Returns an empty list at the root.
+  focus. Returns an empty list at the root. Raises an `ExZipper.Error` at the
+  end of a walk.
 
   ## Examples
 
@@ -256,10 +257,12 @@ defmodule ExZipper.Zipper do
   @doc """
   Returns true if a depth-first walkthrough of the zipper has been exhausted.
 
-  A zipper at the end of a walk is focused on the root, but it cannot be
-  navigated or have siblings inserted or removed: those functions raise an
-  `ExZipper.Error`, and `next/1` stays at the end. Call `root/1` to start
-  navigating again.
+  A zipper at the end of a walk is focused on the root. Every function that
+  moves or changes the zipper raises an `ExZipper.Error`, including `next/1`,
+  `prev/1`, the editing functions and `map/2`. So do `lefts/1`, `rights/1` and
+  `path/1`, which describe a position the end of a walk does not have. These
+  still work: `node/1`, `branch?/1`, `children/1`, `end?/1`, `to_list/1`,
+  `find/2` and `find_all/2`. Call `root/1` to start again.
 
   ## Examples
 
@@ -296,7 +299,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Moves to the leftmost child of the current focus. Raises an `ExZipper.Error`
-  if the current focus is a leaf or an empty branch.
+  if the current focus is a leaf or an empty branch, or at the end of a walk.
 
   ## Example
 
@@ -318,7 +321,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Moves up to the parent of the current focus. Raises an `ExZipper.Error` if
-  already at the root of the zipper.
+  already at the root of the zipper, or at the end of a walk.
 
   ## Example
 
@@ -336,8 +339,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Moves to the next sibling to the right of the current focus. Raises an
-  `ExZipper.Error` if at the root or already at the rightmost sibling at its
-  depth in the tree.
+  `ExZipper.Error` if at the root, already at the rightmost sibling at its
+  depth in the tree, or at the end of a walk.
 
   ## Examples
 
@@ -359,8 +362,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Moves to the next sibling to the left of the current focus. Raises an
-  `ExZipper.Error` if at the root or already at the leftmost sibling at its
-  depth in the tree.
+  `ExZipper.Error` if at the root, already at the leftmost sibling at its
+  depth in the tree, or at the end of a walk.
 
   ## Examples
 
@@ -383,7 +386,7 @@ defmodule ExZipper.Zipper do
   @doc """
   Moves to the rightmost sibling at the same depth as the current focus. Remains
   in place if already focused on the rightmost sibling. Raises an
-  `ExZipper.Error` if called on the root.
+  `ExZipper.Error` if called on the root or at the end of a walk.
 
   ## Examples
 
@@ -404,7 +407,7 @@ defmodule ExZipper.Zipper do
   @doc """
   Moves to the leftmost sibling at the same depth as the current focus. Remains
   in place if already focused on the leftmost sibling. Raises an
-  `ExZipper.Error` if called on the root.
+  `ExZipper.Error` if called on the root or at the end of a walk.
 
   ## Examples
 
@@ -423,10 +426,11 @@ defmodule ExZipper.Zipper do
   defdelegate leftmost(zipper), to: ExZipper.Zipper.Navigation
 
   @doc """
-  Moves to the next focus in a depth-first walk through the zipper. If it
-  reaches the end, subsequent calls to `next` return the same focus, and
-  other navigation functions raise an `ExZipper.Error`. Call
-  `root/1` to start navigating again.
+  Moves to the next focus in a depth-first walk through the zipper. After the
+  last node, `next` returns a zipper at the end of the walk, focused on the
+  root (see `end?/1`). Calling `next` again, or any other function that moves
+  or changes the zipper, raises an `ExZipper.Error`. Call `root/1` to start
+  again.
 
   ## Examples
 
@@ -452,8 +456,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Moves to the previous focus in a depth-first walk through the zipper. Raises
-  an `ExZipper.Error` if called on the end of the walk. Returns the root if called on
-  the root.
+  an `ExZipper.Error` if called at the end of the walk. Returns the root if
+  called on the root.
 
   ## Examples
 
@@ -474,7 +478,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Inserts a new node as a new sibling to the immediate right of the current focus.
-  Does not change focus. Raises an `ExZipper.Error` if called on the root.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root or
+  at the end of a walk.
 
   ## Examples
 
@@ -492,7 +497,8 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Inserts a new node as a new sibling to the immediate left of the current focus.
-  Does not change focus. Raises an `ExZipper.Error` if called on the root.
+  Does not change focus. Raises an `ExZipper.Error` if called on the root or
+  at the end of a walk.
 
   ## Examples
 
@@ -510,7 +516,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Inserts a child as the leftmost child of the current focus. Raises an
-  `ExZipper.Error` if called on a leaf.
+  `ExZipper.Error` if called on a leaf or at the end of a walk.
 
   ## Examples
 
@@ -528,7 +534,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Appends a child as the rightmost child of the current focus. Raises an
-  `ExZipper.Error` if called on a leaf.
+  `ExZipper.Error` if called on a leaf or at the end of a walk.
 
   ## Examples
 
@@ -546,6 +552,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Replaces the current focus with the node passed as the second argument.
+  Raises an `ExZipper.Error` at the end of a walk.
 
   ## Examples
 
@@ -563,7 +570,7 @@ defmodule ExZipper.Zipper do
 
   @doc """
   Replaces the current focus with the result of applying the given function
-  to the current focus
+  to the current focus. Raises an `ExZipper.Error` at the end of a walk.
 
   ## Examples
 
@@ -694,6 +701,8 @@ defmodule ExZipper.Zipper do
   @doc """
   Replaces every node visited by a depth-first walk with the result of
   calling `fun` on it, and returns a zipper focused on the (updated) root.
+  Raises an `ExZipper.Error` if called at the end of a walk. A walk that
+  starts before the end runs to completion.
 
   `fun` is called on branches as well as leaves, so it must handle every kind
   of node in the tree. A branch is updated before its children are visited,

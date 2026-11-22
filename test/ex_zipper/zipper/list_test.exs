@@ -927,11 +927,10 @@ defmodule ExZipper.Zipper.ListTest do
         context.zipper
         |> Stream.iterate(&Zipper.next/1)
         |> Enum.find(&Zipper.end?/1)
-        |> Zipper.map(fn _ -> :should_not_be_applied end)
 
-      assert zipper.focus == context.list
-      assert zipper.crumbs == nil
-      refute Zipper.end?(zipper)
+      assert_zipper_error(:map_end, fn ->
+        Zipper.map(zipper, fn _ -> :should_not_be_applied end)
+      end)
     end
   end
 end

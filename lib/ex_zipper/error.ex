@@ -34,7 +34,8 @@ defmodule ExZipper.Error do
     leftmost_from_end: "Cannot call leftmost from the end",
     remove_end: "Cannot remove the end",
     replace_end: "Cannot replace the end",
-    edit_end: "Cannot edit at the end"
+    edit_end: "Cannot edit at the end",
+    map_end: "Cannot call map when at the end"
   ]
 
   @moduledoc """

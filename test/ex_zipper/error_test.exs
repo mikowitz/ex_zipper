@@ -38,7 +38,8 @@ defmodule ExZipper.ErrorTest do
     :insert_child_of_end,
     :append_child_of_end,
     :replace_end,
-    :edit_end
+    :edit_end,
+    :map_end
   ]
 
   setup do
@@ -204,6 +205,43 @@ defmodule ExZipper.ErrorTest do
       assert_zipper_error(:append_child_of_end, fn -> Zipper.append_child(context.walked, 0) end)
       assert_zipper_error(:replace_end, fn -> Zipper.replace(context.walked, [0]) end)
       assert_zipper_error(:edit_end, fn -> Zipper.edit(context.walked, & &1) end)
+    end
+
+    test "raises an ExZipper.Error when mapping over the walk", context do
+      assert_zipper_error(:map_end, fn -> Zipper.map(context.walked, & &1) end)
+    end
+
+    test "records the root as the focus when map raises", context do
+      error = assert_zipper_error(:map_end, fn -> Zipper.map(context.walked, & &1) end)
+
+      assert error.focus == [1, [], [2, 3, [4, 5]]]
+    end
+
+    test "can be mapped over again after an explicit call to root", context do
+      zipper =
+        context.walked
+        |> Zipper.root()
+        |> Zipper.map(fn
+          n when is_integer(n) -> -n
+          list -> list
+        end)
+
+      assert Zipper.node(zipper) == [-1, [], [-2, -3, [-4, -5]]]
+      refute Zipper.end?(zipper)
+    end
+
+    test "does not stop map from reaching the end of a walk it started before the end",
+         context do
+      zipper =
+        context.zipper
+        |> Zipper.find(&(&1 == 5))
+        |> Zipper.map(fn
+          n when is_integer(n) -> -n
+          list -> list
+        end)
+
+      assert Zipper.node(zipper) == [1, [], [2, 3, [4, -5]]]
+      refute Zipper.end?(zipper)
     end
 
     test "can be edited again after an explicit call to root", context do

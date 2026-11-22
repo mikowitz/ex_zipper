@@ -21,7 +21,8 @@ defmodule ExZipper.Zipper.Traversal do
   end
 
   @spec map(Zipper.t(), (any() -> any())) :: Zipper.t()
-  def map(zipper, fun), do: recur_map(zipper, fun)
+  def map(%Zipper{crumbs: :end} = zipper, _), do: ExZipper.raise_error(:map_end, zipper)
+  def map(%Zipper{} = zipper, fun), do: recur_map(zipper, fun)
 
   defp recur_map(zipper, fun) do
     if Zipper.end?(zipper) do

@@ -65,9 +65,10 @@ moving as deep down one branch of the tree before moving laterally.
 * `Zipper.next` moves to the next node, preferring to move to a child over a sibling
 * `Zipper.prev` moves back up through a depth-first ordering of the tree
 * `Zipper.end?` returns `true` if the zipper has reached the end of a depth-first
-  walk. At this point, the walk has been exhausted: it cannot be reversed with
-  `Zipper.prev`, and other navigation functions raise an `ExZipper.Error`.
-  Call `Zipper.root` to start navigating again.
+  walk. At this point the walk has been exhausted: `Zipper.next`, `Zipper.prev`,
+  and any other function that moves or changes the zipper (including the
+  editing functions and `Zipper.map`) raise an `ExZipper.Error`. Call
+  `Zipper.root` to start again.
 
 ### Searching and transforming zippers
 
