@@ -17,11 +17,6 @@ defmodule ExZipper.TreeTest do
     def make_node(node, kids), do: %{node | kids: kids}
   end
 
-  defmodule PartialTree do
-    @moduledoc false
-    def branch?(node), do: is_map(node)
-  end
-
   defmodule UndeclaredTree do
     @moduledoc false
     def branch?(node), do: is_list(node)
@@ -112,36 +107,12 @@ defmodule ExZipper.TreeTest do
       end)
     end
 
-    test "raises an ArgumentError for a module that implements none of the callbacks" do
-      error = assert_raise ArgumentError, fn -> Zipper.new(String, "root") end
-
-      assert error.message =~ "String"
-      assert error.message =~ "branch?/1"
-      assert error.message =~ "children/1"
-      assert error.message =~ "make_node/2"
-    end
-
-    test "raises an ArgumentError naming only the missing callbacks" do
-      error = assert_raise ArgumentError, fn -> Zipper.new(PartialTree, %{}) end
-
-      assert error.message =~ "ExZipper.TreeTest.PartialTree"
-      refute error.message =~ "branch?/1"
-      assert error.message =~ "children/1"
-      assert error.message =~ "make_node/2"
-    end
-
-    test "raises an ArgumentError for a module that does not exist" do
-      error = assert_raise ArgumentError, fn -> Zipper.new(NoSuchTreeModule, %{}) end
-
-      assert error.message =~ "NoSuchTreeModule"
-    end
-
-    test "raises an ArgumentError when not given a module" do
-      assert_raise ArgumentError, fn ->
+    test "raises a FunctionClauseError when not given a module" do
+      assert_raise FunctionClauseError, fn ->
         apply(Zipper, :new, [%{}, %{}])
       end
 
-      assert_raise ArgumentError, fn ->
+      assert_raise FunctionClauseError, fn ->
         apply(Zipper, :new, ["MapTree", %{}])
       end
     end

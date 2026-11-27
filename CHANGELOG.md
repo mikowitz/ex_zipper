@@ -47,6 +47,13 @@ matches on `{:error, reason}` tuples needs to be updated.
 - `map/2`, which replaces every node in a depth-first walk with the result of
   calling a function on it.
 - `root/1` now leaves the end state of a depth-first walk.
+- The `ExZipper.Tree` behaviour, with `branch?/1`, `children/1` and
+  `make_node/2` callbacks, for defining a kind of tree in a module.
+- `new/2`, which returns a zipper for a tree using the callbacks of a module
+  that implements `ExZipper.Tree`.
+- An `Inspect` implementation for `ExZipper.Zipper` that shows the focused
+  node, with `...` marking whether there is more of the tree before or after
+  it, instead of the raw struct with its stored functions and crumbs.
 
 ### Fixed
 

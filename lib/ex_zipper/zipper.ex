@@ -64,40 +64,35 @@ defmodule ExZipper.Zipper do
     }
   end
 
-  @expected_functions MapSet.new(branch?: 1, children: 1, make_node: 2)
+  @doc """
+  Returns a new zipper with `root` as the root tree of the zipper, using the
+  `branch?/1`, `children/1` and `make_node/2` functions of `module` to
+  navigate and rebuild the tree.
 
-  def new(module, root) do
-    case function_exported?(module, :__info__, 1) do
-      true ->
-        case check_behaviour(module) == @expected_functions do
-          true ->
-            %__MODULE__{
-              focus: root,
-              crumbs: nil,
-              functions: %{
-                branch?: &module.branch?/1,
-                children: &module.children/1,
-                make_node: &module.make_node/2
-              }
-            }
+  `module` should implement the `ExZipper.Tree` behaviour. It does not have
+  to declare `@behaviour ExZipper.Tree`, but declaring it lets the compiler
+  warn you about missing callbacks.
 
-          false ->
-            unimplemented =
-              MapSet.difference(@expected_functions, MapSet.new(check_behaviour(module)))
-              |> MapSet.to_list()
-              |> Enum.map_join(", ", fn {fun, arity} -> "#{fun}/#{arity}" end)
+  `new/2` does not check that `module` defines the callbacks. If one is
+  missing, an `UndefinedFunctionError` is raised the first time the zipper
+  calls it, not when the zipper is created.
 
-            raise ArgumentError,
-              message: "Expected #{module} to implement ExZipper.Tree behaviour: #{unimplemented}"
-        end
+  ## Example
 
-      false ->
-        raise ArgumentError, message: "Module #{module} has not been compiled"
-    end
-  end
+      iex> defmodule ListTree do
+      ...>   @behaviour ExZipper.Tree
+      ...>   def branch?(node), do: is_list(node)
+      ...>   def children(node), do: node
+      ...>   def make_node(_node, children), do: children
+      ...> end
+      iex> zipper = Zipper.new(ListTree, [1, [2, 3]])
+      iex> zipper |> Zipper.down() |> Zipper.node()
+      1
 
-  defp check_behaviour(module) do
-    MapSet.new(module.module_info(:functions)) |> MapSet.intersection(@expected_functions)
+  """
+  @spec new(module(), any()) :: Zipper.t()
+  def new(module, root) when is_atom(module) do
+    zipper(&module.branch?/1, &module.children/1, &module.make_node/2, root)
   end
 
   @doc """
