@@ -1,6 +1,7 @@
 defmodule ExZipper.Zipper.StructTest do
   use ExUnit.Case, async: true
   alias ExZipper.Zipper, as: Z
+  import ExZipper.TestHelpers
 
   defmodule Measure do
     defstruct [:time_signature, :music]
@@ -68,14 +69,14 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "down/1" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = %{context.zipper | focus: %Note{note: "cs4"}}
-      assert Z.down(zipper) == {:error, :down_from_leaf}
+      assert_zipper_error(:down_from_leaf, fn -> Z.down(zipper) end)
     end
 
-    test "returns an error if called on an empty branch", context do
+    test "raises an ExZipper.Error if called on an empty branch", context do
       zipper = %{context.zipper | focus: %Voice{name: "empty", music: []}}
-      assert Z.down(zipper) == {:error, :down_from_empty_branch}
+      assert_zipper_error(:down_from_empty_branch, fn -> Z.down(zipper) end)
     end
 
     test "moves focus to the first child of the current focus", context do
@@ -93,13 +94,13 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "right/1" do
-    test "returns an error if called on the root", context do
-      assert Z.right(context.zipper) == {:error, :right_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:right_from_root, fn -> Z.right(context.zipper) end)
     end
 
-    test "returns an error if called on the rightmost sibling", context do
+    test "raises an ExZipper.Error if called on the rightmost sibling", context do
       zipper = context.zipper |> Z.down() |> Z.right() |> Z.right() |> Z.right() |> Z.right()
-      assert Z.right(zipper) == {:error, :right_from_rightmost}
+      assert_zipper_error(:right_from_rightmost, fn -> Z.right(zipper) end)
     end
 
     test "moves focus to the sibling to the right of the current focus", context do
@@ -118,13 +119,13 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "left" do
-    test "returns an error if called on the root", context do
-      assert Z.left(context.zipper) == {:error, :left_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:left_from_root, fn -> Z.left(context.zipper) end)
     end
 
-    test "returns an error if called on the leftmost sibling", context do
+    test "raises an ExZipper.Error if called on the leftmost sibling", context do
       zipper = Z.down(context.zipper)
-      assert Z.left(zipper) == {:error, :left_from_leftmost}
+      assert_zipper_error(:left_from_leftmost, fn -> Z.left(zipper) end)
     end
 
     test "moves focus to the sibling to the left of the current focus", context do
@@ -144,8 +145,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "up" do
-    test "returns an error if called on root", context do
-      assert Z.up(context.zipper) == {:error, :up_from_root}
+    test "raises an ExZipper.Error if called on root", context do
+      assert_zipper_error(:up_from_root, fn -> Z.up(context.zipper) end)
     end
 
     test "moves focus to the current focus' parent", context do
@@ -188,8 +189,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "rightmost" do
-    test "returns an error if called on the root", context do
-      assert Z.rightmost(context.zipper) == {:error, :rightmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rightmost_from_root, fn -> Z.rightmost(context.zipper) end)
     end
 
     test "moves focus to the rightmost sibling of the current focus", context do
@@ -237,8 +238,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "leftmost" do
-    test "returns an error if called on the root", context do
-      assert Z.leftmost(context.zipper) == {:error, :leftmost_from_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:leftmost_from_root, fn -> Z.leftmost(context.zipper) end)
     end
 
     test "moves focus to the leftmost sibling of the current focus", context do
@@ -295,11 +296,24 @@ defmodule ExZipper.Zipper.StructTest do
 
       assert Z.root(zipper) == context.zipper
     end
+
+    test "returns to the root from the end of a depth-first walk", context do
+      zipper =
+        context.zipper
+        |> Stream.iterate(&Z.next/1)
+        |> Enum.find(&Z.end?/1)
+
+      zipper = Z.root(zipper)
+
+      assert zipper.focus == context.measure
+      assert zipper.crumbs == nil
+      refute Z.end?(zipper)
+    end
   end
 
   describe "lefts" do
-    test "returns an error if called on the root", context do
-      assert Z.lefts(context.zipper) == {:error, :lefts_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:lefts_of_root, fn -> Z.lefts(context.zipper) end)
     end
 
     test "returns all siblings to the left of the current focus", context do
@@ -314,8 +328,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "rights" do
-    test "returns an error if called on the root", context do
-      assert Z.rights(context.zipper) == {:error, :rights_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:rights_of_root, fn -> Z.rights(context.zipper) end)
     end
 
     test "returns all siblings to the right of the current focus", context do
@@ -444,10 +458,10 @@ defmodule ExZipper.Zipper.StructTest do
       assert Z.children(context.zipper) == context.measure.music
     end
 
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.children(zipper) == {:error, :children_of_leaf}
+      assert_zipper_error(:children_of_leaf, fn -> Z.children(zipper) end)
     end
   end
 
@@ -545,8 +559,10 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_left" do
-    test "returns an error if called on the root", context do
-      assert Z.insert_left(context.zipper, %Note{note: "bf,16"}) == {:error, :insert_left_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_left_of_root, fn ->
+        Z.insert_left(context.zipper, %Note{note: "bf,16"})
+      end)
     end
 
     test "inserts the provided node to the left of the current focus, without changing focus",
@@ -589,9 +605,10 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_right" do
-    test "returns an error if called on the root", context do
-      assert Z.insert_right(context.zipper, %Note{note: "bf,16"}) ==
-               {:error, :insert_right_of_root}
+    test "raises an ExZipper.Error if called on the root", context do
+      assert_zipper_error(:insert_right_of_root, fn ->
+        Z.insert_right(context.zipper, %Note{note: "bf,16"})
+      end)
     end
 
     test "inserts the provided node to the right of the current focus, without changing focus",
@@ -634,10 +651,12 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "insert_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.insert_child(zipper, %Note{note: "bf8"}) == {:error, :insert_child_of_leaf}
+      assert_zipper_error(:insert_child_of_leaf, fn ->
+        Z.insert_child(zipper, %Note{note: "bf8"})
+      end)
     end
 
     test "adds a node as the leftmost child of the current focus", context do
@@ -680,10 +699,12 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "append_child" do
-    test "returns an error if called on a leaf", context do
+    test "raises an ExZipper.Error if called on a leaf", context do
       zipper = Z.down(context.zipper)
 
-      assert Z.append_child(zipper, %Note{note: "bf8"}) == {:error, :append_child_of_leaf}
+      assert_zipper_error(:append_child_of_leaf, fn ->
+        Z.append_child(zipper, %Note{note: "bf8"})
+      end)
     end
 
     test "adds a node as the leftmost child of the current focus", context do
@@ -754,9 +775,7 @@ defmodule ExZipper.Zipper.StructTest do
       zipper = Z.next(zipper)
       assert zipper.focus == context.measure
       assert Z.end?(zipper)
-      zipper = Z.next(zipper)
-      assert zipper.focus == context.measure
-      assert Z.end?(zipper)
+      assert_zipper_error(:next_of_end, fn -> Z.next(zipper) end)
     end
   end
 
@@ -823,7 +842,7 @@ defmodule ExZipper.Zipper.StructTest do
         |> Z.next()
 
       assert Z.end?(zipper)
-      assert Z.prev(zipper) == {:error, :prev_of_end}
+      assert_zipper_error(:prev_of_end, fn -> Z.prev(zipper) end)
     end
   end
 
@@ -853,8 +872,8 @@ defmodule ExZipper.Zipper.StructTest do
   end
 
   describe "remove" do
-    test "returns an error when called on the root", context do
-      assert Z.remove(context.zipper) == {:error, :remove_root}
+    test "raises an ExZipper.Error when called on the root", context do
+      assert_zipper_error(:remove_root, fn -> Z.remove(context.zipper) end)
     end
 
     test "removes the current focus, and moves to the prev location in a depth-first walk",
@@ -961,25 +980,181 @@ defmodule ExZipper.Zipper.StructTest do
     end
   end
 
+  describe "remove landing on the previous node in a depth-first walk" do
+    test "lands on the deepest rightmost descendant of a left sibling voice", context do
+      zipper = context.zipper |> Z.find(&(&1 == %Note{note: "c'4"})) |> Z.remove()
+
+      assert Z.node(zipper) == %Note{note: "b4"}
+
+      assert Z.root(zipper).focus == %{
+               context.measure
+               | music: List.delete_at(context.measure.music, -1)
+             }
+    end
+
+    test "lands on the last note of a nested voice", context do
+      zipper = context.zipper |> Z.find(&match?(%Voice{name: "alto"}, &1)) |> Z.remove()
+
+      assert Z.node(zipper) == %Note{note: "a4"}
+      assert zipper |> Z.up() |> Z.node() |> Map.get(:name) == "soprano2"
+    end
+
+    test "lands on an empty voice to the left", context do
+      zipper = context.zipper |> Z.find(&(&1 == %Note{note: "d4"})) |> Z.remove()
+
+      assert Z.node(zipper) == %Voice{name: "empty", music: []}
+    end
+
+    test "rebuilds the parents with make_node when the tree is rebuilt", context do
+      zipper =
+        context.zipper
+        |> Z.find(&(&1 == %Note{note: "b4"}))
+        |> Z.remove()
+
+      assert Z.node(zipper) == %Voice{name: "alto", music: []}
+
+      %Measure{music: music} = Z.root(zipper).focus
+      %Voice{name: "soprano", music: soprano} = Enum.at(music, 3)
+      assert List.last(soprano) == %Voice{name: "alto", music: []}
+    end
+  end
+
   describe "to_list" do
     test "returns a depth-first list of all elements in the zipper", context do
       zipper_list = Z.to_list(context.zipper)
       assert length(zipper_list) == 13
-      assert Enum.map(zipper_list, &(&1.__struct__)) == [
-        Measure,
-        Note,
-        Voice,
-        Note,
-        Voice,
-        Note,
-        Note,
-        Voice,
-        Note,
-        Note,
-        Voice,
-        Note,
-        Note
-      ]
+
+      assert Enum.map(zipper_list, & &1.__struct__) == [
+               Measure,
+               Note,
+               Voice,
+               Note,
+               Voice,
+               Note,
+               Note,
+               Voice,
+               Note,
+               Note,
+               Voice,
+               Note,
+               Note
+             ]
+    end
+  end
+
+  describe "find" do
+    test "returns a zipper focused on the first node in a depth-first walk matching the predicate",
+         context do
+      zipper = Z.find(context.zipper, &match?(%Voice{name: "soprano2"}, &1))
+
+      assert zipper.focus == %Voice{
+               name: "soprano2",
+               music: [
+                 %Note{note: "g4"},
+                 %Note{note: "a4"}
+               ]
+             }
+
+      assert Enum.map(Z.lefts(zipper), & &1.note) == ["e4", "f4"]
+    end
+
+    test "returns a zipper whose focus can be edited and persisted back to the root", context do
+      zipper =
+        context.zipper
+        |> Z.find(&match?(%Note{note: "b4"}, &1))
+        |> Z.edit(fn note -> %{note | note: "b16"} end)
+        |> Z.root()
+
+      assert zipper.focus == %Measure{
+               time_signature: "4/4",
+               music: [
+                 %Note{note: "c4"},
+                 %Voice{name: "empty", music: []},
+                 %Note{note: "d4"},
+                 %Voice{
+                   name: "soprano",
+                   music: [
+                     %Note{note: "e4"},
+                     %Note{note: "f4"},
+                     %Voice{
+                       name: "soprano2",
+                       music: [
+                         %Note{note: "g4"},
+                         %Note{note: "a4"}
+                       ]
+                     },
+                     %Voice{
+                       name: "alto",
+                       music: [
+                         %Note{note: "b16"}
+                       ]
+                     }
+                   ]
+                 },
+                 %Note{note: "c'4"}
+               ]
+             }
+    end
+
+    test "returns nil if no node matches the predicate", context do
+      assert Z.find(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == nil
+    end
+  end
+
+  describe "find_all" do
+    test "returns a list of zippers focused on every node matching the predicate, in depth-first order",
+         context do
+      zippers = Z.find_all(context.zipper, &match?(%Voice{}, &1))
+
+      assert Enum.map(zippers, &Z.node(&1).name) == ["empty", "soprano", "soprano2", "alto"]
+    end
+
+    test "returns an empty list if no node matches the predicate", context do
+      assert Z.find_all(context.zipper, &match?(%Voice{name: "tenor"}, &1)) == []
+    end
+  end
+
+  describe "map" do
+    test "applies the function to every node in a depth-first walk, returning a zipper at the root",
+         context do
+      zipper =
+        Z.map(context.zipper, fn
+          note = %Note{} -> %{note | note: String.upcase(note.note)}
+          voice = %Voice{} -> %{voice | name: String.upcase(voice.name)}
+          node -> node
+        end)
+
+      assert zipper.crumbs == nil
+
+      assert zipper.focus == %Measure{
+               time_signature: "4/4",
+               music: [
+                 %Note{note: "C4"},
+                 %Voice{name: "EMPTY", music: []},
+                 %Note{note: "D4"},
+                 %Voice{
+                   name: "SOPRANO",
+                   music: [
+                     %Note{note: "E4"},
+                     %Note{note: "F4"},
+                     %Voice{
+                       name: "SOPRANO2",
+                       music: [
+                         %Note{note: "G4"},
+                         %Note{note: "A4"}
+                       ]
+                     },
+                     %Voice{
+                       name: "ALTO",
+                       music: [
+                         %Note{note: "B4"}
+                       ]
+                     }
+                   ]
+                 },
+                 %Note{note: "C'4"}
+               ]
+             }
     end
   end
 end

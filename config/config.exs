@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 #     config(:ex_zipper, key: :value)
 #
@@ -13,4 +13,4 @@ use Mix.Config
 
 # Example per-environment config:
 #
-import_config("#{Mix.env}.exs")
+import_config("#{Mix.env()}.exs")

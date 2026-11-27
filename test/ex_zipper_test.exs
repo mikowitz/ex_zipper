@@ -4,6 +4,4 @@ defmodule ExZipperTest do
   alias ExZipper.Zipper
 
   doctest ExZipper.Zipper
-  doctest ExZipper.Zipper.Navigation
-  doctest ExZipper.Zipper.Editing
 end
