@@ -64,6 +64,42 @@ defmodule ExZipper.Zipper do
     }
   end
 
+  @expected_functions MapSet.new(branch?: 1, children: 1, make_node: 2)
+
+  def new(module, root) do
+    case function_exported?(module, :__info__, 1) do
+      true ->
+        case check_behaviour(module) == @expected_functions do
+          true ->
+            %__MODULE__{
+              focus: root,
+              crumbs: nil,
+              functions: %{
+                branch?: &module.branch?/1,
+                children: &module.children/1,
+                make_node: &module.make_node/2
+              }
+            }
+
+          false ->
+            unimplemented =
+              MapSet.difference(@expected_functions, MapSet.new(check_behaviour(module)))
+              |> MapSet.to_list()
+              |> Enum.map_join(", ", fn {fun, arity} -> "#{fun}/#{arity}" end)
+
+            raise ArgumentError,
+              message: "Expected #{module} to implement ExZipper.Tree behaviour: #{unimplemented}"
+        end
+
+      false ->
+        raise ArgumentError, message: "Module #{module} has not been compiled"
+    end
+  end
+
+  defp check_behaviour(module) do
+    MapSet.new(module.module_info(:functions)) |> MapSet.intersection(@expected_functions)
+  end
+
   @doc """
   Returns a new zipper built from the given list
 
@@ -755,5 +791,15 @@ defmodule ExZipper.Zipper do
       true -> Enum.reverse(acc)
       false -> _to_list(next(zipper), [__MODULE__.node(zipper) | acc])
     end
+  end
+end
+
+defimpl Inspect, for: ExZipper.Zipper do
+  import Inspect.Algebra
+
+  def inspect(%@for{focus: focus, crumbs: crumbs}, opts) do
+    prefix = if is_nil(crumbs), do: "", else: "... "
+    suffix = if crumbs == :end, do: "", else: " ..."
+    concat(["#ExZipper.Zipper<" <> prefix, to_doc(focus, opts), suffix <> ">"])
   end
 end
